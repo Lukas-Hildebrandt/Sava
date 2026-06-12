@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sava — travel safe, discover more</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --ink:#0d1f1a;
+    --ink-2:#163028;
+    --paper:#faf8f3;
+    --palm:#0e7a5f;
+    --palm-dark:#06402f;
+    --coral:#8c2f39;
+    --gold:#c9a464;
+    --sky:#2a7fb8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;font-family:'Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--paper);color:var(--ink);}
+  #app{display:flex;flex-direction:column;height:100%;}
+
+  header{
+    background:linear-gradient(165deg,var(--ink) 0%,var(--ink-2) 100%);
+    color:var(--paper);
+    padding:14px 18px 14px;
+    z-index:1001;
+    box-shadow:0 2px 14px rgba(0,0,0,.3);
+    border-bottom:1px solid rgba(201,164,100,.35);
+  }
+  header .eyebrow{
+    font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:3px;
+  }
+  header h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:1.45rem;
+    font-weight:500;
+    letter-spacing:.02em;
+  }
+  header h1 .flag{font-size:1.05rem;margin-right:7px;}
+  header p{font-size:.7rem;opacity:.6;margin-top:3px;letter-spacing:.02em;}
+
+  .points-chip{
+    position:absolute;top:14px;right:16px;
+    border:1px solid rgba(201,164,100,.45);border-radius:11px;
+    background:rgba(201,164,100,.1);
+    color:var(--gold);font-size:.72rem;font-weight:700;letter-spacing:.04em;
+    padding:6px 11px;cursor:pointer;display:flex;align-items:center;gap:5px;
+  }
+  .points-chip:active{transform:scale(.96);}
+  header{position:relative;}
+
+  .reward-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .reward-item{
+    display:flex;align-items:center;gap:13px;
+    border:1px solid #ece8dd;border-radius:13px;padding:12px 14px;
+  }
+  .reward-item.earned{border-color:rgba(14,122,95,.45);background:rgba(14,122,95,.05);}
+  .reward-item .rw-pts{
+    flex-shrink:0;font-size:.68rem;font-weight:700;color:var(--gold);
+    border:1px solid rgba(201,164,100,.5);border-radius:8px;padding:5px 8px;
+    white-space:nowrap;
+  }
+  .reward-item .rw-name{font-size:.83rem;font-weight:600;}
+  .reward-item .rw-sub{font-size:.7rem;color:#8d8775;margin-top:1px;}
+  .reward-item .rw-check{margin-left:auto;color:var(--palm);font-weight:700;font-size:.95rem;}
+
+  .confirm-btn{
+    margin-top:14px;width:100%;padding:12px;border-radius:12px;
+    border:1px solid rgba(140,47,57,.35);background:rgba(140,47,57,.06);
+    color:var(--coral);font-weight:600;font-size:.85rem;cursor:pointer;
+  }
+  .confirm-btn:disabled{opacity:.45;cursor:default;}
+  .confirm-bar{
+    margin-top:10px;height:6px;border-radius:3px;background:#efece3;overflow:hidden;
+  }
+  .confirm-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--coral),#c9646e);border-radius:3px;}
+  .confirm-label{font-size:.68rem;color:#8d8775;margin-top:6px;}
+
+  .stay-btn{
+    margin-top:14px;width:100%;padding:13px;border-radius:12px;
+    border:1px solid #e6e2d6;background:#fff;
+    color:var(--ink);font-weight:600;font-size:.85rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  .stay-btn:active{transform:scale(.98);}
+  .stay-btn .ab{color:#FF5A5F;font-weight:800;}
+
+  .searchbox{position:relative;margin-top:12px;}
+  .searchbox input{
+    width:100%;border:1px solid rgba(201,164,100,.3);border-radius:12px;
+    padding:11px 40px 11px 16px;font-size:.9rem;
+    background:rgba(250,248,243,.08);color:var(--paper);outline:none;
+    transition:border-color .2s, background .2s;
+  }
+  .searchbox input::placeholder{color:rgba(250,248,243,.45);}
+  .searchbox input:focus{border-color:var(--gold);background:rgba(250,248,243,.12);}
+  .searchbox .icon{
+    position:absolute;right:14px;top:50%;transform:translateY(-50%);
+    font-size:.95rem;opacity:.55;pointer-events:none;
+  }
+  .results{
+    position:absolute;top:calc(100% + 8px);left:0;right:0;
+    background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 8px 28px rgba(0,0,0,.3);
+    max-height:240px;overflow-y:auto;display:none;
+  }
+  .results.show{display:block;}
+  .results button{
+    display:flex;align-items:center;gap:11px;width:100%;
+    border:none;background:none;padding:12px 16px;cursor:pointer;
+    font-size:.85rem;color:var(--ink);text-align:left;
+    border-bottom:1px solid #f2efe8;
+  }
+  .results button:last-child{border-bottom:none;}
+  .results button:active{background:#f6f3ec;}
+  .results .rdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .results .rdot.g{background:var(--palm);}
+  .results .rdot.r{background:var(--coral);}
+  .results .empty{padding:13px 16px;font-size:.8rem;color:#999;}
+
+  .filters{
+    display:flex;gap:10px;margin-top:12px;
+  }
+  .chip{
+    flex:1;
+    border:1px solid transparent;border-radius:12px;
+    padding:8px 10px;font-size:.74rem;font-weight:600;letter-spacing:.04em;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+    transition:opacity .15s, transform .1s;
+    color:var(--paper);background:rgba(250,248,243,.07);
+  }
+  .chip:active{transform:scale(.97);}
+  .chip .dot{width:8px;height:8px;border-radius:50%;}
+  .chip.green .dot{background:#2eb98c;}
+  .chip.red .dot{background:#d4737e;}
+  .chip.green{border-color:rgba(46,185,140,.4);}
+  .chip.red{border-color:rgba(212,115,126,.4);}
+  .chip.off{opacity:.32;}
+  .chip.gold{border-color:rgba(201,164,100,.45);}
+  .chip.gold .dot{background:var(--gold);}
+
+  /* Service-Marker (Praktisches) */
+  .svc{
+    width:24px;height:24px;border-radius:50%;
+    background:#fff;border:1.5px solid #2a5d8f;
+    box-shadow:0 2px 5px rgba(0,0,0,.25);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;
+  }
+
+  /* Kategorie-Filter im Sheet */
+  .svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+  .svc-toggle{
+    display:flex;align-items:center;gap:9px;
+    border:1.5px solid #e6e2d6;border-radius:12px;
+    padding:11px 12px;cursor:pointer;background:#fff;
+    font-size:.78rem;font-weight:600;color:var(--ink);text-align:left;
+    transition:border-color .15s, background .15s;
+  }
+  .svc-toggle.on{border-color:#2a5d8f;background:rgba(42,93,143,.07);}
+  .svc-toggle .sv-emoji{font-size:1.05rem;}
+
+  #map{flex:1;width:100%;z-index:1;}
+  .soft-tiles{
+    filter:saturate(.45) brightness(1.12) contrast(.85) sepia(.18) hue-rotate(-8deg);
+  }
+
+  /* Grüne Orte: Tropfen-Pins */
+  .pin{
+    width:26px;height:26px;
+    background:#fdfcf9;
+    border:2px solid #06402f;
+    border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    box-shadow:0 2px 6px rgba(0,0,0,.32);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pin span{transform:rotate(45deg);display:flex;}
+  .pin svg{width:13px;height:13px;stroke:#111;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* Rote Zonen: Warnsymbol in der Mitte */
+  .warn-icon{
+    width:30px;height:30px;border-radius:50%;
+    background:#7e1414;border:2.5px solid #fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;color:#fff;font-weight:800;
+  }
+
+  /* Weiche Ränder der Risikozonen */
+  .zone-blur{filter:blur(6px);}
+
+  /* Vorfall-Marker (Nutzermeldungen) */
+  .incident{
+    width:26px;height:26px;border-radius:50%;
+    background:#fff;border:2px solid #d64545;
+    box-shadow:0 2px 5px rgba(0,0,0,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+  }
+  .report-btn{
+    position:absolute;bottom:152px;right:14px;z-index:1000;
+    height:48px;border:1px solid rgba(201,164,100,.4);border-radius:14px;
+    background:rgba(13,31,26,.88);color:var(--paper);font-weight:600;font-size:.82rem;
+    letter-spacing:.03em;
+    padding:0 18px;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.28);
+    display:flex;align-items:center;gap:8px;
+    backdrop-filter:blur(6px);
+  }
+  .report-btn.active{background:var(--coral);border-color:transparent;}
+  .report-btn:active{transform:scale(.96);}
+
+  .report-form label{display:block;font-size:.78rem;font-weight:600;margin:12px 0 5px;}
+  .report-form select,.report-form input{
+    width:100%;padding:10px 12px;font-size:.85rem;
+    border:1.5px solid #ddd8cc;border-radius:10px;background:#fff;outline:none;
+  }
+  .report-form .save{
+    width:100%;margin-top:16px;padding:12px;border:none;border-radius:12px;
+    background:var(--palm);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;
+  }
+
+  .locate-btn{
+    position:absolute;
+    bottom:96px;right:14px;z-index:1000;
+    width:48px;height:48px;border-radius:50%;
+    background:rgba(255,255,255,.92);border:1px solid rgba(13,31,26,.08);
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.22);
+    font-size:1.25rem;display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(6px);
+  }
+  .locate-btn:active{transform:scale(.95);}
+
+  .legend{
+    position:absolute;bottom:14px;left:14px;right:14px;z-index:1000;
+    background:rgba(13,31,26,.82);
+    border:1px solid rgba(201,164,100,.25);
+    border-radius:14px;padding:11px 14px;
+    box-shadow:0 4px 16px rgba(0,0,0,.25);
+    font-size:.72rem;display:flex;gap:18px;justify-content:center;
+    backdrop-filter:blur(8px);
+    color:var(--paper);
+  }
+  .legend span{display:flex;align-items:center;gap:7px;font-weight:500;letter-spacing:.03em;}
+  .legend .lg{width:9px;height:9px;border-radius:50%;}
+  .legend .lg.g{background:#2eb98c;}
+  .legend .lg.dr{background:#a33}
+  .legend .lg.or{background:#d97b3a;}
+  .legend .lg.ye{background:#d9b53a;}
+
+  /* Detail-Karte (Bottom Sheet) */
+  .sheet{
+    position:absolute;left:0;right:0;bottom:0;z-index:1002;
+    background:rgba(255,255,255,.97);border-radius:22px 22px 0 0;
+    box-shadow:0 -8px 32px rgba(0,0,0,.28);
+    padding:20px 24px 30px;
+    transform:translateY(110%);
+    transition:transform .28s cubic-bezier(.32,.72,.33,1);
+    max-height:55%;overflow-y:auto;
+    backdrop-filter:blur(10px);
+  }
+  .sheet.open{transform:translateY(0);}
+  .sheet .grab{width:36px;height:4px;border-radius:2px;background:#ddd8cc;margin:0 auto 14px;}
+  .sheet h2{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:1.15rem;font-weight:500;
+    display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  }
+  .sheet .badge{
+    font-size:.58rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 10px;border-radius:4px;color:#fff;white-space:nowrap;
+    font-family:'Avenir Next','Segoe UI',sans-serif;
+  }
+  .badge.green{background:var(--palm);}
+  .badge.red{background:#7a1212;}
+  .badge.orange{background:#b35a1f;}
+  .badge.yellow{background:#a8851a;}
+  .sheet p{font-size:.86rem;line-height:1.6;margin-top:11px;color:#3c4742;}
+  .sheet .photo{
+    margin-top:14px;border-radius:14px;overflow:hidden;
+    height:130px;position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sheet .photo .ph-icon svg{
+    width:52px;height:52px;stroke:#fff;stroke-width:1.4;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));
+  }
+  .sheet .photo .ph-label{
+    position:absolute;bottom:8px;right:12px;
+    font-size:.6rem;color:rgba(255,255,255,.85);
+    letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  }
+
+  .sheet .src{
+    font-size:.68rem;color:#9a937f;margin-top:14px;font-style:italic;
+    padding-top:10px;border-top:1px solid #efece3;
+  }
+  .sheet .close{
+    position:absolute;top:14px;right:16px;border:none;background:#f1eee6;
+    width:30px;height:30px;border-radius:50%;font-size:.9rem;cursor:pointer;color:#666;
+  }
+
+  .leaflet-popup-content-wrapper{border-radius:10px;}
+
+  .toast{
+    position:absolute;top:130px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:8px 16px;border-radius:20px;
+    font-size:.78rem;z-index:2100;opacity:0;transition:opacity .3s;pointer-events:none;
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1;}
+
+  /* ===== Startseite ===== */
+  .splash{
+    position:absolute;inset:0;z-index:2000;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(201,164,100,.18), transparent 55%),
+      linear-gradient(170deg,var(--ink) 0%,var(--ink-2) 55%,#0b2a21 100%);
+    color:var(--paper);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:32px 28px;
+    transition:opacity .5s ease, visibility .5s;
+  }
+  .splash.hidden{opacity:0;visibility:hidden;}
+  .splash .s-icon svg{
+    width:84px;height:84px;stroke:var(--gold);stroke-width:1.1;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;
+    margin-bottom:26px;
+  }
+  .splash .s-eyebrow{
+    font-size:.66rem;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:10px;
+  }
+  .splash h2{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:2.3rem;font-weight:500;letter-spacing:.01em;
+    margin-bottom:14px;
+  }
+  .splash .s-sub{
+    font-size:.92rem;line-height:1.65;opacity:.78;
+    max-width:300px;margin-bottom:36px;
+  }
+  .splash .s-points{
+    display:flex;flex-direction:column;gap:13px;
+    margin-bottom:42px;text-align:left;
+  }
+  .splash .s-points div{
+    display:flex;align-items:center;gap:12px;
+    font-size:.84rem;opacity:.9;
+  }
+  .splash .s-points .sp-dot{
+    width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  }
+  .splash .s-points .sp-dot.g{background:#2eb98c;}
+  .splash .s-points .sp-dot.r{background:#d4737e;}
+  .splash .s-points .sp-dot.go{background:var(--gold);}
+  .splash .s-start{
+    border:1px solid var(--gold);border-radius:14px;
+    background:linear-gradient(160deg,rgba(201,164,100,.16),rgba(201,164,100,.05));
+    color:var(--paper);
+    font-size:.95rem;font-weight:600;letter-spacing:.06em;
+    padding:15px 44px;cursor:pointer;
+    transition:transform .12s, background .2s;
+  }
+  .splash .s-start:active{transform:scale(.97);}
+  .splash .s-note{
+    position:absolute;bottom:26px;left:28px;right:28px;
+    font-size:.62rem;opacity:.4;letter-spacing:.04em;
+  }
+
+  /* ===== Reiseziel-Auswahl ===== */
+  .splash .step{display:none;width:100%;max-width:380px;flex-direction:column;align-items:center;}
+  .splash .step.active{display:flex;}
+  .dest-list{width:100%;display:flex;flex-direction:column;gap:12px;margin-bottom:8px;}
+  .dest-card{
+    width:100%;border:1px solid rgba(250,248,243,.14);border-radius:16px;
+    background:rgba(250,248,243,.05);
+    padding:15px 17px;cursor:pointer;text-align:left;color:var(--paper);
+    display:flex;align-items:center;gap:14px;
+    transition:border-color .2s, background .2s, transform .1s;
+  }
+  .dest-card:active{transform:scale(.985);}
+  .dest-card.unlocked{border-color:rgba(46,185,140,.5);}
+  .dest-card .d-flag{font-size:1.5rem;flex-shrink:0;}
+  .dest-card .d-info{flex:1;min-width:0;}
+  .dest-card .d-name{font-size:.92rem;font-weight:600;letter-spacing:.02em;}
+  .dest-card .d-sub{font-size:.7rem;opacity:.55;margin-top:2px;}
+  .dest-card .d-price{
+    flex-shrink:0;font-size:.8rem;font-weight:600;
+    padding:7px 13px;border-radius:10px;white-space:nowrap;
+  }
+  .dest-card .d-price.free{
+    background:rgba(46,185,140,.18);color:#5fdcb4;border:1px solid rgba(46,185,140,.4);
+  }
+  .dest-card .d-price.paid{
+    background:rgba(201,164,100,.13);color:var(--gold);border:1px solid rgba(201,164,100,.4);
+  }
+  .dest-card .d-arrow{
+    flex-shrink:0;font-size:1.3rem;color:rgba(250,248,243,.45);
+    padding:0 4px;line-height:1;
+  }
+  .tier-divider{
+    width:100%;display:flex;align-items:center;gap:12px;
+    margin:14px 0 12px;font-size:.62rem;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(250,248,243,.4);
+  }
+  .tier-divider::before,.tier-divider::after{
+    content:'';flex:1;height:1px;background:rgba(250,248,243,.12);
+  }
+  .splash .back-link{
+    margin-top:18px;background:none;border:none;color:rgba(250,248,243,.5);
+    font-size:.78rem;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="eyebrow">República Dominicana</div>
+    <h1><span class="flag">🇩🇴</span>Sava</h1>
+    <button class="points-chip" id="pointsChip">★ <span id="pointsVal">0</span> Puntos</button>
+    <p>Schöne Orte entdecken · Risikozonen erkennen</p>
+    <div class="searchbox">
+      <input id="searchInput" type="text" placeholder="Ort suchen, z.B. Boca Chica …" autocomplete="off">
+      <span class="icon">🔍</span>
+      <div class="results" id="results"></div>
+    </div>
+    <div class="filters">
+      <button class="chip green" id="chipGreen"><span class="dot"></span>Schöne Orte</button>
+      <button class="chip red" id="chipRed"><span class="dot"></span>Risikozonen</button>
+      <button class="chip gold" id="chipSvc"><span class="dot"></span>Praktisches</button>
+    </div>
+  </header>
+  <div id="map"></div>
+  <button class="locate-btn" id="locateBtn" title="Meinen Standort anzeigen">📍</button>
+  <button class="report-btn" id="reportBtn">⚠️ Vorfall melden</button>
+  <div class="legend">
+    <span><span class="lg g"></span>Sehenswert</span>
+    <span><span class="lg dr"></span>Gefahr</span>
+    <span><span class="lg or"></span>Nachts</span>
+    <span><span class="lg ye"></span>Abzocke</span>
+  </div>
+  <div class="sheet" id="sheet">
+    <button class="close" id="sheetClose">✕</button>
+    <div class="grab"></div>
+    <h2 id="sheetTitle"></h2>
+    <div id="sheetPhoto"></div>
+    <p id="sheetText"></p>
+    <div class="src" id="sheetSrc"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <!-- Startseite -->
+  <div class="splash" id="splash">
+
+    <!-- Schritt 1: Willkommen -->
+    <div class="step active" id="stepWelcome">
+      <div class="s-icon"><svg viewBox="0 0 24 24"><path d="M8 20.5c.2-4.5 1.2-8 3-10.5"/><path d="M11 10C9.4 7.8 7.4 7.3 5.8 8.1"/><path d="M11 10c1.4-2.3 3.4-2.9 5-2.1"/><path d="M11 10c-.2-2.4 1-4.2 2.5-5"/><path d="M8 20.5c2.6-1.1 4.6-2.9 5.9-5.4"/><path d="M13.9 15.1c-1.2-1.6-2.7-2-3.9-1.4"/><path d="M13.9 15.1c1.1-1.7 2.6-2.1 3.8-1.5"/><path d="M13.9 15.1c-.1-1.8.7-3.1 1.8-3.7"/><path d="M4 20.5h16"/></svg></div>
+      <div class="s-eyebrow">Reise. Entdecke. Bleib sicher.</div>
+      <h2>Sava</h2>
+      <p class="s-sub">Entdecke das Schönste deines Reiseziels und erkenne Risikozonen auf einen Blick — alles auf einer Karte.</p>
+      <div class="s-points">
+        <div><span class="sp-dot g"></span>Traumstrände, Natur &amp; Kultur auf der Karte</div>
+        <div><span class="sp-dot r"></span>Risikozonen auf einen Blick erkennen</div>
+        <div><span class="sp-dot go"></span>Vorfälle melden &amp; von anderen lernen</div>
+      </div>
+      <button class="s-start" id="splashStart">Reiseziel wählen</button>
+    </div>
+
+    <!-- Schritt 2: Kontinent wählen -->
+    <div class="step" id="stepDest">
+      <div class="s-eyebrow">Dein Reiseziel</div>
+      <h2 style="font-size:1.6rem;margin-bottom:24px;">Wohin geht es?</h2>
+      <div class="dest-list" id="continentList"></div>
+      <div class="tier-divider">Alles freischalten</div>
+      <div class="dest-list">
+        <button class="dest-card locked" data-name="Weltweit">
+          <span class="d-flag">🌍</span>
+          <span class="d-info">
+            <span class="d-name">Weltweit</span><br>
+            <span class="d-sub">Alle Länder, alle Updates</span>
+          </span>
+          <span class="d-arrow">›</span>
+        </button>
+      </div>
+      <button class="back-link" id="destBack">Zurück</button>
+    </div>
+
+    <!-- Schritt 3: Länder des Kontinents -->
+    <div class="step" id="stepCountry">
+      <div class="s-eyebrow">Dein Reiseziel</div>
+      <h2 style="font-size:1.45rem;margin-bottom:24px;" id="countryTitle"></h2>
+      <div class="dest-list" id="countryList"></div>
+      <button class="back-link" id="countryBack">Zurück zu den Kontinenten</button>
+    </div>
+
+    <p class="s-note">Prototyp · Preise sind Platzhalter · Sicherheitsdaten sind Beispieldaten — bitte stets offizielle Reisehinweise prüfen</p>
+  </div>
+</div>
+
+<script>
+// ===== Daten: Beispiel-Orte (im echten Betrieb kämen diese aus einer Datenbank) =====
+const PLACES = [
+  // --- Schöne Orte (grün) ---
+  {type:'good', name:'Zona Colonial, Santo Domingo', lat:18.4734, lng:-69.8849,
+   img:'https://commons.wikimedia.org/wiki/Special:FilePath/Santo%20Domingo%20-%20Catedral%20Santa%20Maria%20La%20Menor%20and%20Statue%20of%20Christopher%20Columbus.JPG?width=640',
+   imgCredit:'Foto: Martin Falbisoner, Wikimedia Commons, CC BY-SA 4.0',
+   text:'UNESCO-Welterbe und älteste europäische Stadtanlage Amerikas. Kathedrale, Alcázar de Colón, gemütliche Plätze und Cafés. Tagsüber sehr gut besuchbar.',
+   src:'Beispieldaten · inspiriert von UNESCO & Reiseführern'},
+  {type:'good', name:'Playa Bávaro / Punta Cana', lat:18.6996, lng:-68.4055,
+   img:'https://commons.wikimedia.org/wiki/Special:FilePath/View%20northwards%20along%20coastline%20at%20Punta%20Cana%201.jpg?width=640',
+   imgCredit:'Foto: Wikimedia Commons',
+   text:'Einer der bekanntesten Strände der Karibik: weißer Sand, türkises Wasser, viele Resorts. Gut ausgebaute touristische Infrastruktur.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Saona-Insel', lat:18.1530, lng:-68.7050,
+   img:'https://commons.wikimedia.org/wiki/Special:FilePath/Saona%20Island%20December%202020.jpg?width=640',
+   imgCredit:'Foto: Wikimedia Commons',
+   text:'Trauminsel im Nationalpark Cotubanamá. Nur per Boot erreichbar (Touren ab Bayahibe). Palmen, Sandbänke, Seesterne.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Los Haitises Nationalpark', lat:19.0667, lng:-69.5833,
+   text:'Mangroven, Kalksteinfelsen, Höhlen mit Taíno-Felszeichnungen. Bootstouren ab Sabana de la Mar oder Samaná.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Las Terrenas, Samaná', lat:19.3110, lng:-69.5420,
+   text:'Entspannter Küstenort mit schönen Stränden (Playa Bonita, Playa Cosón) und internationalem Flair. Jan–März: Buckelwale in der Bucht von Samaná.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Salto El Limón', lat:19.2780, lng:-69.4430,
+   text:'Ca. 40 m hoher Wasserfall im Regenwald der Samaná-Halbinsel. Zu Fuß oder zu Pferd erreichbar, Badebecken am Fuß.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Cabarete', lat:19.7510, lng:-70.4080,
+   text:'Weltbekannter Spot für Kite- und Windsurfen an der Nordküste. Lebendige Strandpromenade, gute Surfschulen.',
+   src:'Beispieldaten'},
+  {type:'good', name:'27 Charcos de Damajagua', lat:19.6710, lng:-70.7860,
+   text:'27 natürliche Wasserfälle und Pools zum Klettern, Rutschen und Springen — nur mit Guide und Ausrüstung. Nahe Puerto Plata.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Pico Duarte / Jarabacoa', lat:19.1170, lng:-70.6360,
+   text:'Region um den höchsten Berg der Karibik (3.098 m). Wandern, Rafting, kühles Bergklima — die "dominikanischen Alpen".',
+   src:'Beispieldaten'},
+  {type:'good', name:'Bahía de las Águilas', lat:17.8580, lng:-71.6420,
+   text:'Oft als schönster Strand des Landes bezeichnet: 8 km unberührter Sand im Nationalpark Jaragua, ganz im Südwesten. Anfahrt per Boot ab Cabo Rojo.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Laguna Dudú', lat:19.6440, lng:-69.8980,
+   text:'Türkisblaue Süßwasser-Cenote bei Cabrera. Schwimmen, Höhlen, Seilbahn-Sprung für Mutige.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Isla Catalina', lat:18.3550, lng:-69.0220,
+   text:'Kleine Insel vor La Romana mit hervorragenden Schnorchel- und Tauchriffen ("The Wall").',
+   src:'Beispieldaten'},
+
+  {type:'good', name:'Playa Boca Chica (tagsüber)', lat:18.4480, lng:-69.6130,
+   text:'Flache, geschützte Lagune mit ruhigem Wasser — beliebt bei Familien und Hauptstädtern, ca. 30 Min. von Santo Domingo. Tagsüber lebhaft und gut besucht; abends siehe Sicherheitshinweis.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Bayahibe', lat:18.3710, lng:-68.8380,
+   text:'Charmantes Fischerdorf und Ausgangspunkt für Saona- und Catalina-Touren. Schöner Dorfstrand, gute Tauchbasis, entspannter als Punta Cana.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Playa Rincón', lat:19.2780, lng:-69.2360,
+   text:'Rund 3 km naturbelassener Traumstrand auf der Samaná-Halbinsel, regelmäßig unter den schönsten Stränden der Karibik gelistet. Per Boot ab Las Galeras oder über eine Piste erreichbar.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Cayo Levantado (Bacardi-Insel)', lat:19.1620, lng:-69.2740,
+   text:'Kleine Insel in der Bucht von Samaná mit weißem Sandstrand — bekannt aus der Bacardi-Werbung. Kurze Bootsfahrt ab Samaná-Stadt.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Cayo Arena / Punta Rucia', lat:19.8430, lng:-71.0560,
+   text:'Winzige Sandbank im türkisen Meer vor der Nordwestküste, umgeben von Korallenriff — Schnorchelparadies. Touren ab Punta Rucia.',
+   src:'Beispieldaten'},
+  {type:'good', name:'El Morro, Monte Cristi', lat:19.8920, lng:-71.6440,
+   text:'Markanter Tafelberg am Meer im trockenen Nordwesten, Nationalpark mit einsamen Stränden und Mangroven. Ganz anderes Gesicht der Insel.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Lago Enriquillo', lat:18.4830, lng:-71.6500,
+   text:'Größter See der Karibik, liegt rund 40 m unter dem Meeresspiegel. Salzwasser, Amerikanische Krokodile, Leguane auf der Isla Cabritos.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Hoyo Azul, Punta Cana', lat:18.5090, lng:-68.4480,
+   text:'Tiefblaue Cenote am Fuß einer Felswand im Scape Park Cap Cana — leuchtend türkises Wasser zum Schwimmen.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Altos de Chavón', lat:18.4220, lng:-68.8900,
+   text:'Künstlerdorf im Stil eines mediterranen Dorfs des 16. Jahrhunderts, hoch über dem Río Chavón bei La Romana. Amphitheater, Galerien, tolle Ausblicke.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Playa Macao', lat:18.7660, lng:-68.4430,
+   text:'Einer der letzten frei zugänglichen Naturstrände der Punta-Cana-Region, beliebt bei Surfern. Goldener Sand, kräftige Wellen.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Constanza & Aguas Blancas', lat:18.8580, lng:-70.7160,
+   text:'Hochtal auf ca. 1.200 m: Erdbeerfelder, kühle Nächte, und der Wasserfall Salto de Aguas Blancas (ca. 83 m) — höchster der Karibik.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Cueva de las Maravillas', lat:18.4460, lng:-69.2300,
+   text:'„Höhle der Wunder" zwischen San Pedro und La Romana: rund 500 Taíno-Felsmalereien, gut ausgebauter unterirdischer Rundweg.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Dunas de Baní', lat:18.2400, lng:-70.4900,
+   text:'Überraschende Wüstenlandschaft: bis zu 35 m hohe Sanddünen auf der Halbinsel Las Calderas, dahinter das Karibische Meer.',
+   src:'Beispieldaten'},
+  {type:'good', name:'Küste von Barahona', lat:18.0330, lng:-71.0780,
+   text:'Wilde Südwestküste: Kiesstrände wie San Rafael mit Süßwasserpools direkt am Meer, grüne Berge bis ans Wasser. Geheimtipp-Region.',
+   src:'Beispieldaten'},
+
+  // --- Risikozonen (rot) — als Gebietsflächen ---
+  // level: 'red' = hohe Gefahr | 'orange' = zeitabhängig (v.a. nachts) | 'yellow' = Abzocke/Kleinkriminalität
+  {type:'risk', level:'red', name:'Grenzgebiet zu Haiti', lat:19.05, lng:-71.72,
+   poly:[[19.93,-71.74],[19.72,-71.62],[19.40,-71.66],[19.15,-71.58],[18.95,-71.70],[18.70,-71.72],[18.45,-71.64],[18.20,-71.76],[18.03,-71.74],[18.05,-71.92],[18.35,-71.93],[18.60,-71.86],[18.90,-71.84],[19.20,-71.80],[19.55,-71.78],[19.80,-71.83],[19.93,-71.78]],
+   text:'Das Auswärtige Amt rät von Reisen in das unmittelbare Grenzgebiet zu Haiti ab. Lage in Haiti ist sehr instabil; Grenzübertritte vermeiden.',
+   src:'Beispieldaten · sinngemäß nach Reisehinweisen des Auswärtigen Amts (bitte aktuelle Hinweise prüfen!)'},
+  {type:'risk', level:'orange', name:'Dajabón (Grenzort)', lat:19.548, lng:-71.708, minZoom:10,
+   poly:[[19.59,-71.72],[19.58,-71.68],[19.56,-71.65],[19.53,-71.64],[19.50,-71.66],[19.49,-71.70],[19.51,-71.73],[19.55,-71.74]],
+   text:'Grenzstadt zu Haiti mit Grenzmarkt. Erhöhte Vorsicht: angespannte Lage, Taschendiebstahl, keine Reisen nach Einbruch der Dunkelheit.',
+   src:'Beispieldaten'},
+  {type:'risk', level:'orange', name:'Santo Domingo — bestimmte Stadtviertel', lat:18.51, lng:-69.86, minZoom:10,
+   poly:[[18.555,-69.905],[18.548,-69.870],[18.540,-69.845],[18.525,-69.832],[18.505,-69.828],[18.492,-69.842],[18.488,-69.862],[18.495,-69.885],[18.510,-69.900],[18.530,-69.912]],
+   text:'In einigen Vierteln nördlich des Zentrums erhöhte Kriminalität, besonders nachts. Empfehlung: nachts Taxi/Uber statt zu Fuß, Wertsachen nicht sichtbar tragen.',
+   src:'Beispieldaten · allgemeine Sicherheitshinweise'},
+  {type:'risk', level:'orange', name:'Boca Chica (nachts)', lat:18.453, lng:-69.607, minZoom:10,
+   poly:[[18.4630,-69.6230],[18.4645,-69.6150],[18.4640,-69.6070],[18.4620,-69.5990],[18.4585,-69.5930],[18.4540,-69.5900],[18.4500,-69.5905],[18.4475,-69.5935],[18.4462,-69.5980],[18.4458,-69.6040],[18.4452,-69.6100],[18.4455,-69.6160],[18.4470,-69.6210],[18.4505,-69.6245],[18.4560,-69.6255],[18.4605,-69.6250]],
+   text:'Beliebter Strand nahe der Hauptstadt, aber nachts erhöhtes Risiko von Diebstahl und Belästigung. Tagsüber unproblematischer.',
+   src:'Beispieldaten'},
+  {type:'risk', level:'orange', name:'Puerto Plata — Stadtrandgebiete', lat:19.78, lng:-70.69, minZoom:10,
+   poly:[[19.800,-70.715],[19.796,-70.695],[19.788,-70.678],[19.776,-70.672],[19.764,-70.680],[19.760,-70.698],[19.768,-70.714],[19.782,-70.722]],
+   text:'Touristenzonen sind gut gesichert, in einzelnen Randvierteln jedoch Vorsicht, besonders abends.',
+   src:'Beispieldaten'},
+  {type:'risk', level:'orange', name:'Santiago — einzelne Randviertel', lat:19.46, lng:-70.70, minZoom:10,
+   poly:[[19.488,-70.725],[19.482,-70.705],[19.472,-70.690],[19.458,-70.686],[19.446,-70.695],[19.442,-70.712],[19.450,-70.728],[19.466,-70.735],[19.480,-70.733]],
+   text:'Zweitgrößte Stadt des Landes. Zentrum und Monumento-Viertel tagsüber unproblematisch; in einzelnen Randvierteln nachts erhöhte Vorsicht, Taxis nutzen.',
+   src:'Beispieldaten · allgemeine Sicherheitshinweise'},
+  {type:'risk', level:'orange', name:'San Pedro de Macorís — Teilgebiete', lat:18.46, lng:-69.30, minZoom:10,
+   poly:[[18.475,-69.320],[18.471,-69.302],[18.462,-69.290],[18.450,-69.288],[18.441,-69.298],[18.440,-69.314],[18.449,-69.326],[18.463,-69.330]],
+   text:'Hafen- und Industriestadt östlich der Hauptstadt. Abseits der Durchgangsstraßen nachts erhöhte Vorsicht, insbesondere in Hafennähe.',
+   src:'Beispieldaten'},
+  {type:'risk', level:'yellow', name:'Higüey — Busbahnhofsviertel', lat:18.615, lng:-68.708, minZoom:10,
+   poly:[[18.624,-68.718],[18.621,-68.705],[18.614,-68.698],[18.606,-68.700],[18.602,-68.710],[18.606,-68.720],[18.615,-68.724]],
+   text:'Verkehrsknoten der Ostregion auf dem Weg nach Punta Cana. Rund um Märkte und Busbahnhof auf Taschendiebstahl achten; nachts Umgebung meiden.',
+   src:'Beispieldaten'},
+  {type:'risk', level:'red', name:'Herrera & Umgebung, Santo Domingo Oeste', lat:18.475, lng:-69.97, minZoom:10,
+   poly:[[18.495,-69.990],[18.492,-69.968],[18.483,-69.952],[18.469,-69.948],[18.458,-69.958],[18.456,-69.976],[18.464,-69.992],[18.480,-69.999]],
+   text:'Dicht besiedelte Viertel im Westen der Hauptstadt. Für Reisende ohne Ortskenntnis besonders nachts nicht empfehlenswert.',
+   src:'Beispieldaten · allgemeine Sicherheitshinweise'},
+];
+
+// ===== Deutschland =====
+const PLACES_DE = [
+  {type:'good', name:'Schloss Neuschwanstein', lat:47.5576, lng:10.7498,
+   text:'Das Märchenschloss Ludwigs II. in den Allgäuer Alpen — eines der meistbesuchten Schlösser Europas. Tickets vorab buchen, schönster Blick von der Marienbrücke.', src:'Beispieldaten'},
+  {type:'good', name:'Brandenburger Tor & Museumsinsel, Berlin', lat:52.5163, lng:13.3777,
+   text:'Das Wahrzeichen der Hauptstadt, daneben die Museumsinsel (UNESCO) mit fünf Weltklasse-Museen. Gut kombinierbar mit Reichstag und Unter den Linden.', src:'Beispieldaten'},
+  {type:'good', name:'Speicherstadt & Elbphilharmonie, Hamburg', lat:53.5434, lng:9.9882,
+   text:'Größter historischer Lagerhauskomplex der Welt (UNESCO) und die spektakuläre Elbphilharmonie — die Plaza ist kostenlos zugänglich.', src:'Beispieldaten'},
+  {type:'good', name:'Kölner Dom', lat:50.9413, lng:6.9583,
+   text:'Gotisches Meisterwerk und UNESCO-Welterbe direkt am Hauptbahnhof. Turmbesteigung mit 533 Stufen, grandioser Blick über den Rhein.', src:'Beispieldaten'},
+  {type:'good', name:'Bastei, Sächsische Schweiz', lat:50.9617, lng:14.0727,
+   text:'Spektakuläre Felsformation hoch über der Elbe mit der berühmten Basteibrücke. Wanderparadies, früh morgens am schönsten.', src:'Beispieldaten'},
+  {type:'good', name:'Kreidefelsen, Rügen', lat:54.5530, lng:13.6620,
+   text:'Strahlend weiße Kreideküste im Nationalpark Jasmund, dazu der Königsstuhl und Buchenwälder (UNESCO). Ostsee-Klassiker.', src:'Beispieldaten'},
+  {type:'good', name:'Königssee, Berchtesgaden', lat:47.5550, lng:12.9790,
+   text:'Smaragdgrüner Gebirgssee zwischen steilen Wänden, Bootsfahrt zur Wallfahrtskirche St. Bartholomä. Fjord-Feeling in Bayern.', src:'Beispieldaten'},
+  {type:'good', name:'Altstadt Heidelberg', lat:49.4106, lng:8.7100,
+   text:'Romantische Altstadt mit Schlossruine über dem Neckar, Alte Brücke und Philosophenweg. Abends besonders stimmungsvoll.', src:'Beispieldaten'},
+  {type:'good', name:'Rothenburg ob der Tauber', lat:49.3770, lng:10.1790,
+   text:'Mittelalterliche Stadt wie aus dem Bilderbuch: komplette Stadtmauer, Fachwerk, Plönlein. Höhepunkt der Romantischen Straße.', src:'Beispieldaten'},
+  {type:'good', name:'Triberger Wasserfälle, Schwarzwald', lat:48.1310, lng:8.2290,
+   text:'Mit 163 m Fallhöhe unter den höchsten Wasserfällen Deutschlands, mitten im Schwarzwald. Kombinierbar mit Kuckucksuhren und Bollenhut-Tradition.', src:'Beispieldaten'},
+  {type:'good', name:'Zugspitze, Garmisch', lat:47.4210, lng:10.9850,
+   text:'Deutschlands höchster Berg (2.962 m) — mit Zahnradbahn und Seilbahn bequem erreichbar, Panorama über 400 Gipfel in vier Ländern.', src:'Beispieldaten'},
+  {type:'good', name:'Spreewald', lat:51.8650, lng:13.9620,
+   text:'UNESCO-Biosphärenreservat mit hunderten Wasserkanälen — per Kahn oder Paddelboot durch die Fließe, dazu die berühmten Gurken.', src:'Beispieldaten'},
+  {type:'risk', level:'orange', name:'Frankfurt — Bahnhofsviertel', lat:50.1070, lng:8.6680, minZoom:9,
+   poly:[[50.1115,8.6590],[50.1110,8.6650],[50.1095,8.6720],[50.1075,8.6760],[50.1045,8.6745],[50.1035,8.6680],[50.1045,8.6610],[50.1075,8.6575]],
+   text:'Rund um den Hauptbahnhof offene Drogenszene und Beschaffungskriminalität. Tagsüber belebt und passierbar, nachts besser Umwege oder Taxi.', src:'Beispieldaten · allgemeine Sicherheitshinweise'},
+  {type:'risk', level:'orange', name:'Berlin — Görlitzer Park & Umgebung', lat:52.4965, lng:13.4380, minZoom:9,
+   poly:[[52.5005,13.4290],[52.5000,13.4380],[52.4985,13.4450],[52.4955,13.4460],[52.4930,13.4410],[52.4935,13.4320],[52.4960,13.4270]],
+   text:'Bekannter Drogenumschlagplatz. Tagsüber normaler Park mit Familien, nach Einbruch der Dunkelheit meiden; Wertsachen nicht sichtbar tragen.', src:'Beispieldaten · allgemeine Sicherheitshinweise'},
+  {type:'risk', level:'yellow', name:'Hamburg — Hauptbahnhof/St. Georg', lat:53.5530, lng:10.0060, minZoom:9,
+   poly:[[53.5560,9.9990],[53.5555,10.0060],[53.5540,10.0120],[53.5515,10.0125],[53.5500,10.0070],[53.5510,10.0000],[53.5535,9.9970]],
+   text:'Rund um den Hauptbahnhof Taschendiebstahl und aufdringliches Ansprechen. Gepäck im Blick behalten, besonders zu Stoßzeiten.', src:'Beispieldaten'},
+  {type:'risk', level:'yellow', name:'Köln — Hauptbahnhof & Domplatte', lat:50.9430, lng:6.9590, minZoom:9,
+   poly:[[50.9455,6.9540],[50.9450,6.9600],[50.9438,6.9650],[50.9415,6.9645],[50.9405,6.9590],[50.9415,6.9540],[50.9435,6.9520]],
+   text:'Touristen-Hotspot mit erhöhtem Taschendiebstahl-Risiko, v. a. bei Veranstaltungen und nachts. Keine echte Gefahrenzone — Wachsamkeit genügt.', src:'Beispieldaten'},
+];
+const SERVICES_DE = [
+  {cat:'exchange', name:'ReiseBank, Frankfurt Hbf', lat:50.1070, lng:8.6630, note:'Wechselstube direkt im Hauptbahnhof, lange Öffnungszeiten.'},
+  {cat:'sim', name:'Saturn, Berlin Alexanderplatz', lat:52.5210, lng:13.4130, note:'Prepaid-SIMs aller Anbieter; Aktivierung mit Reisepass per Video-Ident.'},
+  {cat:'sim', name:'Telekom Shop, München Marienplatz', lat:48.1370, lng:11.5750, note:'Touristen-Prepaid und eSIM, englischsprachige Beratung.'},
+  {cat:'atm', name:'Sparkasse ATM, Köln Dom', lat:50.9405, lng:6.9560, note:'Geldautomat nahe Domplatte; auf Gebührenhinweis fremder Automaten achten.'},
+  {cat:'pharmacy', name:'Apotheke Hauptbahnhof, Hamburg', lat:53.5527, lng:10.0050, note:'Bahnhofsapotheke mit langen Öffnungszeiten, auch sonntags.'},
+  {cat:'market', name:'REWE City, Berlin Mitte', lat:52.5190, lng:13.3890, note:'Innenstadt-Supermarkt, Mo–Sa bis 24 Uhr — sonntags sind Läden meist zu!'},
+  {cat:'police', name:'Bundespolizei, Frankfurt Hbf', lat:50.1075, lng:8.6620, note:'Wache direkt im Bahnhof. Notruf: 110.'},
+];
+const INCIDENTS_DE = [
+  {id:'de1', confirms:6, cat:'diebstahl', lat:52.4975, lng:13.4400, note:'Handy beim Picknick im Görlitzer Park entwendet', date:'2026-06-05'},
+  {id:'de2', confirms:3, cat:'betrug', lat:50.9425, lng:6.9595, note:'„Hütchenspieler" und Spendensammler-Trick auf der Domplatte', date:'2026-05-30'},
+];
+
+// ===== Karte =====
+// Universeller Speicher: nutzt in der Claude-Vorschau window.storage,
+// auf einem echten Webserver automatisch den Browser-Speicher (localStorage).
+const store = {
+  hasClaude: typeof window.storage !== 'undefined' && !!window.storage,
+  async get(key){
+    if(this.hasClaude){
+      try{ const r = await window.storage.get(key); return r ? r.value : null; }
+      catch(e){ return null; }
+    }
+    try{ return localStorage.getItem(key); }catch(e){ return null; }
+  },
+  async set(key, value){
+    if(this.hasClaude){
+      try{ await window.storage.set(key, value); return; }catch(e){ return; }
+    }
+    try{ localStorage.setItem(key, value); }catch(e){}
+  }
+};
+
+const map = L.map('map', {zoomControl:false}).setView([18.85, -70.2], 8);
+L.control.zoom({position:'topright'}).addTo(map);
+
+// Eigene Ebene für die Risikozonen — der Blur liegt auf der ganzen Ebene
+// (funktioniert so auch auf iPhone/Safari, anders als Blur auf einzelnen Formen)
+map.createPane('zonesPane');
+map.getPane('zonesPane').style.filter = 'blur(6px)';
+map.getPane('zonesPane').style.zIndex = 350;
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution:'© OpenStreetMap', maxZoom:18, className:'soft-tiles'
+}).addTo(map);
+
+const greenLayer = L.layerGroup().addTo(map);
+const redLayer = L.layerGroup().addTo(map);
+
+const sheet = document.getElementById('sheet');
+const PHOTO_THEMES = {
+  beach:{bg:'linear-gradient(150deg,#5ed0ee 0%,#1273a8 60%,#0a4d7a 100%)', label:'Strand'},
+  island:{bg:'linear-gradient(150deg,#ffd98a 0%,#2fbf9a 55%,#0e6e8c 100%)', label:'Insel'},
+  water:{bg:'linear-gradient(150deg,#a8e6e0 0%,#2e8b8b 55%,#1f4e54 100%)', label:'Wasserfall & Lagune'},
+  nature:{bg:'linear-gradient(150deg,#9fd86b 0%,#3e9c5f 55%,#143d28 100%)', label:'Natur & Berge'},
+  culture:{bg:'linear-gradient(150deg,#f0cd8f 0%,#c98c4a 55%,#6e4520 100%)', label:'Kultur & Altstadt'},
+  star:{bg:'linear-gradient(150deg,#e8d3a3 0%,#c9a464 55%,#6e5331 100%)', label:'Highlight'}
+};
+function openSheet(p, withPhoto){
+  const badgeClass = p.type==='good' ? 'green' : (p.level==='yellow' ? 'yellow' : p.level==='orange' ? 'orange' : 'red');
+  const badgeText = p.type==='good' ? 'Sehenswert' : (p._badge || 'Vorsicht');
+  document.getElementById('sheetTitle').innerHTML =
+    p.name + ' <span class="badge ' + badgeClass + '">' + badgeText + '</span>';
+  const photoEl = document.getElementById('sheetPhoto');
+  if(withPhoto){
+    const key = iconKeyFor(p.name);
+    const theme = PHOTO_THEMES[key] || PHOTO_THEMES.star;
+    const fallback =
+      '<div class="photo" style="background:'+theme.bg+'">'+
+      '<span class="ph-icon">'+ICONS[key]+'</span>'+
+      '<span class="ph-label">'+theme.label+' · Foto folgt</span></div>';
+    if(p.img){
+      // Echtes Foto laden; bei Fehler (z.B. blockierter Server) automatisch Platzhalter zeigen
+      photoEl.innerHTML =
+        '<div class="photo" style="background:'+theme.bg+'">'+
+        '<img src="'+p.img+'" alt="'+p.name+'" '+
+        'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" '+
+        'onerror="this.parentElement.outerHTML=\''+fallback.replace(/'/g,"\\'")+'\'">'+
+        '<span class="ph-label">'+(p.imgCredit||'')+'</span></div>';
+    } else {
+      photoEl.innerHTML = fallback;
+    }
+  } else {
+    photoEl.innerHTML = '';
+  }
+  document.getElementById('sheetText').textContent = p.text;
+  const oldStay = document.getElementById('stayBtn');
+  if(oldStay) oldStay.remove();
+  if(withPhoto && p.type==='good'){
+    const q = encodeURIComponent(p.name.replace(/\s*\(.*?\)\s*/g,'') + ', ' + (currentCountry==='DE'?'Deutschland':'Dominikanische Republik'));
+    document.getElementById('sheetText').insertAdjacentHTML('afterend',
+      '<button class="stay-btn" id="stayBtn" data-url="https://www.airbnb.de/s/'+q+'/homes">'+
+      '<span class="ab">ⓐ</span> Unterkünfte bei Airbnb anzeigen</button>');
+    document.getElementById('stayBtn').onclick = function(){
+      window.open(this.dataset.url, '_blank');
+    };
+  }
+  document.getElementById('sheetSrc').textContent = 'Quelle: ' + p.src;
+  sheet.classList.add('open');
+}
+document.getElementById('sheetClose').onclick = ()=> sheet.classList.remove('open');
+map.on('click', ()=> sheet.classList.remove('open'));
+
+// Schwarze Linien-Icons (nicht ausgemalt)
+const ICONS = {
+  beach:'<svg viewBox="0 0 24 24"><path d="M8 20.5c.2-4.5 1.2-8 3-10.5"/><path d="M11 10C9.4 7.8 7.4 7.3 5.8 8.1"/><path d="M11 10c1.4-2.3 3.4-2.9 5-2.1"/><path d="M11 10c-.2-2.4 1-4.2 2.5-5"/><path d="M8 20.5c2.6-1.1 4.6-2.9 5.9-5.4"/><path d="M13.9 15.1c-1.2-1.6-2.7-2-3.9-1.4"/><path d="M13.9 15.1c1.1-1.7 2.6-2.1 3.8-1.5"/><path d="M13.9 15.1c-.1-1.8.7-3.1 1.8-3.7"/><path d="M4 20.5h16"/></svg>',
+  island:'<svg viewBox="0 0 24 24"><path d="M4 19a8 8 0 0 1 16 0"/><path d="M2.5 19h19"/><path d="M12 11V6"/><path d="M12 6C10 3.6 7.6 3.2 5.8 4.2"/><path d="M12 6c2-2.4 4.4-2.8 6.2-1.8"/><path d="M12 6c-.2-2 .7-3.5 2-4.3"/></svg>',
+  water:'<svg viewBox="0 0 24 24"><path d="M12 3c3.5 4.5 6 7.7 6 11a6 6 0 0 1-12 0c0-3.3 2.5-6.5 6-11z"/><path d="M9 14a3 3 0 0 0 3 3"/></svg>',
+  nature:'<svg viewBox="0 0 24 24"><path d="m8 9 4-6 4 6"/><path d="m6 14 6-9 6 9"/><path d="m3 20 9-14 9 14z"/></svg>',
+  culture:'<svg viewBox="0 0 24 24"><path d="M4 21h16"/><path d="M5 21V10M9.5 21V10M14.5 21V10M19 21V10"/><path d="M3 10h18L12 4z"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.6L20 9.5l-4 4 1 6-5-3-5 3 1-6-4-4 5.4-.9z"/></svg>'
+};
+function iconKeyFor(name){
+  const n = name.toLowerCase();
+  if(n.includes('playa')||n.includes('strand')||n.includes('bahía')||n.includes('cabarete')) return 'beach';
+  if(n.includes('insel ')||n.startsWith('isla')||n.includes('cayo')||n.includes('rügen')) return 'island';
+  if(n.includes('salto')||n.includes('charcos')||n.includes('laguna')||n.includes('wasserfäll')||n.includes('see,')||n.includes('königssee')||n.includes('spreewald')) return 'water';
+  if(n.includes('park')||n.includes('pico')||n.includes('wald')||n.includes('zugspitze')||n.includes('bastei')||n.includes('morro')||n.includes('dunas')||n.includes('lago')) return 'nature';
+  if(n.includes('zona colonial')||n.includes('dom')||n.includes('schloss')||n.includes('altstadt')||n.includes('tor ')||n.includes('rothenburg')||n.includes('chavón')||n.includes('cueva')) return 'culture';
+  return 'star';
+}
+
+let activePlaces = PLACES;
+let currentCountry = 'DR';
+let buildId = 0;
+
+function buildCountry(list){
+  buildId++;
+  const myBuild = buildId;
+  greenLayer.clearLayers();
+  redLayer.clearLayers();
+  activePlaces = list;
+
+  list.forEach(p=>{
+  if(p.type==='good'){
+    const icon = L.divIcon({
+      className:'',
+      html:'<div class="pin"><span>'+ICONS[iconKeyFor(p.name)]+'</span></div>',
+      iconSize:[26,26], iconAnchor:[13,24], tooltipAnchor:[0,-22]
+    });
+    const m = L.marker([p.lat,p.lng],{icon}).addTo(greenLayer);
+    m.bindTooltip(p.name,{direction:'top'});
+    m.on('click', e=>{
+      L.DomEvent.stopPropagation(e);
+      const targetZoom = Math.max(map.getZoom(), 13);
+      map.flyTo([p.lat,p.lng], targetZoom, {duration:1.0});
+      openSheet(p, true);
+    });
+    p._marker = m;
+  } else {
+    // Gebietsfläche im Stil von Karten-Apps: gedecktes Dunkelrot, feiner Rand
+    // Farben & Texte je Gefahrenstufe
+    const LEVELS = {
+      red:   {fill:'#7a1212', icon:'#7a1212', badge:'Hohe Gefahr'},
+      orange:{fill:'#b35a1f', icon:'#b35a1f', badge:'Nachts meiden'},
+      yellow:{fill:'#c9a227', icon:'#a8851a', badge:'Abzocke möglich'}
+    };
+    const lv = LEVELS[p.level] || LEVELS.red;
+    p._badge = lv.badge;
+    const outer = L.polygon(p.poly,{
+      stroke:false, pane:'zonesPane',
+      fillColor:lv.fill, fillOpacity:.5
+    }).addTo(redLayer);
+    const inner = outer;
+    const popupHtml =
+      '<strong style="font-size:.9rem;">⚠️ '+p.name+'</strong>'+
+      '<p style="margin:6px 0 0;font-size:.8rem;line-height:1.45;">'+p.text+'</p>';
+    function zoneTap(e){
+      L.DomEvent.stopPropagation(e);
+      L.popup({maxWidth:240, closeButton:true})
+        .setLatLng(e.latlng)
+        .setContent(popupHtml)
+        .openOn(map);
+    }
+    outer.on('click', zoneTap);
+    inner.on('click', zoneTap);
+    // Warnsymbol in der Mitte
+    const wicon = L.divIcon({
+      className:'', html:'<div class="warn-icon" style="background:'+lv.icon+'">!</div>',
+      iconSize:[30,30], iconAnchor:[15,15], tooltipAnchor:[0,-16]
+    });
+    const wm = L.marker([p.lat,p.lng],{icon:wicon}).addTo(redLayer);
+    wm.bindTooltip(p.name,{direction:'top'});
+    wm.on('click', e=>{
+      L.DomEvent.stopPropagation(e);
+      map.flyToBounds(outer.getBounds(), {padding:[40,40], duration:1.0});
+      openSheet(p);
+    });
+    // Kleine Zonen erst ab bestimmter Zoomstufe zeigen
+    if(p.minZoom){
+      const zoneParts = [outer, wm];
+      function updateZone(){
+        if(myBuild !== buildId) return; // alter Länderaufbau — ignorieren
+        const show = map.getZoom() >= 9;
+        zoneParts.forEach(part=>{
+          if(show){ if(!redLayer.hasLayer(part)) redLayer.addLayer(part); }
+          else { if(redLayer.hasLayer(part)) redLayer.removeLayer(part); }
+        });
+      }
+      map.on('zoomend', updateZone);
+      updateZone();
+    }
+    p._marker = outer;
+  }
+  });
+}
+buildCountry(PLACES);
+
+// ===== Punkte & Belohnungen =====
+let points = 0;
+let confirmedIds = [];
+const pointsVal = document.getElementById('pointsVal');
+
+async function loadPoints(){
+  try{
+    const v = await store.get('rewards');
+    if(v){
+      const d = JSON.parse(v);
+      points = d.points||0; confirmedIds = d.confirmedIds||[];
+    }
+  }catch(e){}
+  pointsVal.textContent = points;
+}
+async function savePoints(){
+  pointsVal.textContent = points;
+  try{
+    await store.set('rewards', JSON.stringify({points, confirmedIds}));
+  }catch(e){}
+}
+loadPoints();
+
+function addPoints(n, msg){
+  points += n;
+  savePoints();
+  showToast('★ +'+n+' Puntos — '+msg);
+}
+
+const REWARDS = [
+  {pts:50,  name:'Bronze-Entdecker',  sub:'5 % Rabatt auf dein nächstes Länderpaket'},
+  {pts:150, name:'Silber-Entdecker',  sub:'Ein Länderpaket (4,99 €) gratis'},
+  {pts:400, name:'Gold-Entdecker',    sub:'Kontinent-Paket zum halben Preis'},
+  {pts:1000,name:'Embajador',         sub:'Weltweit-Paket gratis + Profil-Abzeichen'}
+];
+document.getElementById('pointsChip').onclick = ()=>{
+  document.getElementById('sheetTitle').innerHTML =
+    'Deine Puntos <span class="badge green">★ '+points+'</span>';
+  document.getElementById('sheetPhoto').innerHTML = '';
+  document.getElementById('sheetText').innerHTML =
+    '<span style="font-size:.83rem;">Sammle Puntos, indem du Vorfälle meldest (+10) und Meldungen anderer bestätigst (+5). Wird deine Meldung von 10 Reisenden bestätigt, gibt es +50 extra.</span>'+
+    '<div class="reward-list">'+
+    REWARDS.map(r=>{
+      const earned = points >= r.pts;
+      return '<div class="reward-item'+(earned?' earned':'')+'">'+
+        '<span class="rw-pts">'+r.pts+' P</span>'+
+        '<span><span class="rw-name">'+r.name+'</span><br><span class="rw-sub">'+r.sub+'</span></span>'+
+        (earned?'<span class="rw-check">✓</span>':'')+
+        '</div>';
+    }).join('')+'</div>';
+  document.getElementById('sheetSrc').textContent =
+    'Prototyp: Bestätigungen anderer Nutzer werden simuliert — echt wird das mit dem zentralen Server.';
+  sheet.classList.add('open');
+};
+
+
+const CATS = {
+  diebstahl:{e:'👜',label:'Diebstahl'},
+  betrug:{e:'💸',label:'Betrug / Abzocke'},
+  belaestigung:{e:'🗣️',label:'Belästigung'},
+  verkehr:{e:'🛵',label:'Verkehr / Unfallstelle'},
+  sonstiges:{e:'❗',label:'Sonstiges'}
+};
+// Beispiel-Meldungen rund um Boca Chica (fiktive Demo-Daten!)
+const DEMO_INCIDENTS = [
+  {id:'d1', confirms:7, cat:'diebstahl', lat:18.4477, lng:-69.6068, note:'Handtasche am Strandabschnitt Ost entwendet', date:'2026-06-02'},
+  {id:'d2', confirms:4, cat:'betrug', lat:18.4509, lng:-69.6105, note:'Überhöhte Preise / falsches Wechselgeld bei Strandverkäufern', date:'2026-05-28'},
+  {id:'d3', confirms:9, cat:'belaestigung', lat:18.4495, lng:-69.6040, note:'Aufdringliche Ansprache nahe Calle Duarte am Abend', date:'2026-06-07'},
+  {id:'d4', confirms:12, cat:'diebstahl', lat:18.4530, lng:-69.6132, note:'Handy aus Tasche gezogen, Nähe Markt', date:'2026-06-09'},
+  {id:'d5', confirms:2, cat:'verkehr', lat:18.4548, lng:-69.6080, note:'Unübersichtliche Kreuzung, viele Mopeds', date:'2026-05-20'},
+];
+
+const incidentLayer = L.layerGroup();
+function addIncidentMarker(inc){
+  const cat = CATS[inc.cat] || CATS.sonstiges;
+  const icon = L.divIcon({
+    className:'', html:'<div class="incident">'+cat.e+'</div>',
+    iconSize:[26,26], iconAnchor:[13,13], tooltipAnchor:[0,-14]
+  });
+  const m = L.marker([inc.lat,inc.lng],{icon}).addTo(incidentLayer);
+  m.bindTooltip(cat.label,{direction:'top'});
+  m.on('click', e=>{
+    L.DomEvent.stopPropagation(e);
+    const cat2 = CATS[inc.cat] || CATS.sonstiges;
+    const confirms = inc.confirms || 0;
+    const pct = Math.min(100, confirms/10*100);
+    const already = confirmedIds.includes(inc.id);
+    document.getElementById('sheetTitle').innerHTML =
+      cat2.e+' '+cat2.label+' <span class="badge red">Meldung</span>';
+    document.getElementById('sheetPhoto').innerHTML = '';
+    document.getElementById('sheetText').innerHTML =
+      '<span style="font-size:.86rem;">'+inc.note+'</span>'+
+      (inc.date?'<br><span style="font-size:.72rem;color:#8d8775;">Gemeldet am '+inc.date+'</span>':'')+
+      '<div class="confirm-bar"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="confirm-label">'+confirms+' von 10 Bestätigungen'+(confirms>=10?' — verifiziert ✓':'')+'</div>'+
+      (inc.user
+        ? '<div class="confirm-label" style="margin-top:10px;">Deine eigene Meldung — andere Reisende können sie bestätigen.</div>'
+        : '<button class="confirm-btn" id="confirmBtn" '+(already?'disabled':'')+'>'+
+          (already?'✓ Von dir bestätigt':'Auch erlebt? Bestätigen (+5 ★)')+'</button>');
+    document.getElementById('sheetSrc').textContent =
+      'Quelle: ' + (inc.user ? 'Deine eigene Meldung' : 'Demo-Nutzermeldung (fiktiv)');
+    sheet.classList.add('open');
+    const cb = document.getElementById('confirmBtn');
+    if(cb && !already){
+      cb.onclick = ()=>{
+        inc.confirms = (inc.confirms||0)+1;
+        confirmedIds.push(inc.id);
+        addPoints(5,'Meldung bestätigt');
+        cb.disabled = true;
+        cb.textContent = '✓ Von dir bestätigt';
+      };
+    }
+  });
+}
+DEMO_INCIDENTS.forEach(addIncidentMarker);
+
+// ===== Länderumschaltung =====
+function activeServices(){ return currentCountry==='DE' ? SERVICES_DE : SERVICES; }
+
+function rebuildIncidents(){
+  incidentLayer.clearLayers();
+  const demos = currentCountry==='DE' ? INCIDENTS_DE : DEMO_INCIDENTS;
+  demos.forEach(addIncidentMarker);
+  (async ()=>{
+    try{
+      const v = await store.get('my-incidents');
+      if(v) JSON.parse(v).forEach(addIncidentMarker);
+    }catch(e){}
+  })();
+}
+
+function switchCountry(code){
+  currentCountry = code;
+  if(code==='DE'){
+    buildCountry(PLACES_DE);
+    map.setView([51.2, 10.4], 6);
+    document.querySelector('header .eyebrow').textContent = 'Deutschland';
+    document.querySelector('header h1 .flag').textContent = '🇩🇪';
+  } else {
+    buildCountry(PLACES);
+    map.setView([18.85, -70.2], 8);
+    document.querySelector('header .eyebrow').textContent = 'República Dominicana';
+    document.querySelector('header h1 .flag').textContent = '🇩🇴';
+  }
+  rebuildIncidents();
+  activeSvcCats = [];
+  renderServices();
+  searchInput.value = '';
+}
+
+// Gespeicherte eigene Meldungen laden
+(async ()=>{
+  try{
+    const v = await store.get('my-incidents');
+    if(v) JSON.parse(v).forEach(addIncidentMarker);
+  }catch(e){ /* noch keine Meldungen gespeichert */ }
+})();
+
+// Vorfälle nur bei Zoom >= 12 zeigen
+function updateIncidentVisibility(){
+  if(map.getZoom() >= 12){
+    if(!map.hasLayer(incidentLayer)) map.addLayer(incidentLayer);
+  } else {
+    if(map.hasLayer(incidentLayer)) map.removeLayer(incidentLayer);
+  }
+}
+map.on('zoomend', updateIncidentVisibility);
+updateIncidentVisibility();
+
+// ===== Vorfall melden =====
+const reportBtn = document.getElementById('reportBtn');
+let reportMode = false;
+reportBtn.onclick = ()=>{
+  reportMode = !reportMode;
+  reportBtn.classList.toggle('active', reportMode);
+  reportBtn.innerHTML = reportMode ? '✕ Abbrechen' : '⚠️ Vorfall melden';
+  if(reportMode) showToast('Tippe auf die Stelle auf der Karte');
+};
+
+map.on('click', e=>{
+  if(!reportMode) return;
+  const {lat,lng} = e.latlng;
+  const opts = Object.entries(CATS).map(([k,v])=>
+    '<option value="'+k+'">'+v.e+' '+v.label+'</option>').join('');
+  document.getElementById('sheetTitle').innerHTML =
+    'Vorfall melden <span class="badge red">Neu</span>';
+  document.getElementById('sheetText').innerHTML =
+    '<div class="report-form">'+
+    '<label>Was ist passiert?</label><select id="incCat">'+opts+'</select>'+
+    '<label>Kurze Beschreibung (optional)</label>'+
+    '<input id="incNote" type="text" maxlength="120" placeholder="z.B. Taschendiebstahl an der Promenade">'+
+    '<button class="save" id="incSave">Meldung speichern</button></div>';
+  document.getElementById('sheetSrc').textContent = '';
+  sheet.classList.add('open');
+
+  document.getElementById('incSave').onclick = async ()=>{
+    const inc = {
+      id:'u'+Date.now(),
+      confirms:0,
+      cat: document.getElementById('incCat').value,
+      note: document.getElementById('incNote').value || 'Keine Beschreibung',
+      lat, lng, user:true,
+      date: new Date().toISOString().slice(0,10)
+    };
+    addIncidentMarker(inc);
+    try{
+      let list = [];
+      try{
+        const v = await store.get('my-incidents');
+        if(v) list = JSON.parse(v);
+      }catch(_){}
+      list.push(inc);
+      await store.set('my-incidents', JSON.stringify(list));
+    }catch(err){ console.error('Speichern fehlgeschlagen', err); }
+    sheet.classList.remove('open');
+    reportMode = false;
+    reportBtn.classList.remove('active');
+    reportBtn.innerHTML = '⚠️ Vorfall melden';
+    addPoints(10,'Vorfall gemeldet');
+    updateIncidentVisibility();
+  };
+});
+
+// ===== Suche =====
+const searchInput = document.getElementById('searchInput');
+const resultsBox = document.getElementById('results');
+
+function normalize(s){
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function renderResults(query){
+  const q = normalize(query.trim());
+  if(!q){ resultsBox.classList.remove('show'); resultsBox.innerHTML=''; return; }
+  const hits = activePlaces.filter(p => normalize(p.name).includes(q)).slice(0,6);
+  if(hits.length===0){
+    resultsBox.innerHTML = '<div class="empty">Kein Ort gefunden — probiere z.B. „Saona" oder „Boca Chica"</div>';
+  } else {
+    resultsBox.innerHTML = hits.map((p,i)=>
+      '<button data-i="'+activePlaces.indexOf(p)+'">'+
+      '<span class="rdot '+(p.type==='good'?'g':'r')+'"></span>'+
+      '<span>'+p.name+'</span></button>'
+    ).join('');
+  }
+  resultsBox.classList.add('show');
+}
+searchInput.addEventListener('input', e=> renderResults(e.target.value));
+searchInput.addEventListener('focus', e=> renderResults(e.target.value));
+
+resultsBox.addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-i]');
+  if(!btn) return;
+  const p = activePlaces[+btn.dataset.i];
+  resultsBox.classList.remove('show');
+  searchInput.value = p.name;
+  searchInput.blur();
+  // Layer ggf. einblenden, damit der Treffer sichtbar ist
+  if(p.type==='good' && !showGreen) document.getElementById('chipGreen').click();
+  if(p.type==='risk' && !showRed) document.getElementById('chipRed').click();
+  map.flyTo([p.lat,p.lng], p.type==='good'?13:11, {duration:1.2});
+  setTimeout(()=> openSheet(p), 1300);
+});
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.searchbox')) resultsBox.classList.remove('show');
+});
+
+// ===== Praktisches (Services) =====
+const SVC_CATS = {
+  exchange:{e:'💱', label:'Wechselstube'},
+  sim:{e:'📶', label:'SIM-Karte'},
+  atm:{e:'🏧', label:'Geldautomat'},
+  pharmacy:{e:'💊', label:'Apotheke'},
+  market:{e:'🛒', label:'Supermarkt'},
+  police:{e:'🚓', label:'Touristenpolizei'}
+};
+// Beispieldaten — in der echten App aus OpenStreetMap/Datenbank
+const SERVICES = [
+  {cat:'exchange', name:'Caribe Express', lat:18.4760, lng:-69.8920, note:'Wechselstube in der Zona Colonial, faire Kurse.'},
+  {cat:'exchange', name:'Wechselstube Bávaro', lat:18.6820, lng:-68.4220, note:'Im Einkaufszentrum Plaza San Juan, Punta Cana.'},
+  {cat:'sim', name:'Claro Store, Santo Domingo', lat:18.4720, lng:-69.8880, note:'Touristen-SIM mit Datenpaket, Reisepass mitbringen.'},
+  {cat:'sim', name:'Altice Shop, Punta Cana', lat:18.6900, lng:-68.4100, note:'Prepaid-SIM und eSIM, englischsprachiges Personal.'},
+  {cat:'sim', name:'Claro, Las Terrenas', lat:19.3120, lng:-69.5400, note:'SIM-Karten an der Hauptstraße, Calle Principal.'},
+  {cat:'atm', name:'Banco Popular ATM', lat:18.4735, lng:-69.8870, note:'Geldautomat in Banknähe nutzen — sicherer als freistehende.'},
+  {cat:'atm', name:'Banreservas ATM, Bávaro', lat:18.6960, lng:-68.4070, note:'Im Plaza-Bereich, tagsüber empfohlen.'},
+  {cat:'atm', name:'Scotiabank ATM, Sosúa', lat:19.7520, lng:-70.5150, note:'Internationale Karten akzeptiert.'},
+  {cat:'pharmacy', name:'Farmacia Carol', lat:18.4700, lng:-69.8900, note:'Große Kette, viele Filialen, teils 24 h.'},
+  {cat:'pharmacy', name:'Farmacia Carol, Bávaro', lat:18.6870, lng:-68.4180, note:'Gut sortiert, gängige Reisemedikamente.'},
+  {cat:'market', name:'Supermercado Nacional', lat:18.4670, lng:-69.9050, note:'Großer Supermarkt mit internationaler Auswahl.'},
+  {cat:'market', name:'Super Pola, Boca Chica', lat:18.4540, lng:-69.6090, note:'Lebensmittel und Strandbedarf nahe der Playa.'},
+  {cat:'police', name:'CESTUR Touristenpolizei', lat:18.4745, lng:-69.8840, note:'Spezialeinheit für Touristen, Zona Colonial. Notruf: 911.'},
+  {cat:'police', name:'CESTUR Punta Cana', lat:18.5820, lng:-68.4040, note:'Touristenpolizei nahe der Hotelzone.'},
+];
+
+const svcLayer = L.layerGroup();
+let activeSvcCats = [];
+function renderServices(){
+  svcLayer.clearLayers();
+  activeServices().filter(s=>activeSvcCats.includes(s.cat)).forEach(s=>{
+    const c = SVC_CATS[s.cat];
+    const icon = L.divIcon({
+      className:'', html:'<div class="svc">'+c.e+'</div>',
+      iconSize:[24,24], iconAnchor:[12,12], tooltipAnchor:[0,-13]
+    });
+    const m = L.marker([s.lat,s.lng],{icon}).addTo(svcLayer);
+    m.bindTooltip(s.name,{direction:'top'});
+    m.on('click', e=>{
+      L.DomEvent.stopPropagation(e);
+      const oldStay2 = document.getElementById('stayBtn');
+      if(oldStay2) oldStay2.remove();
+      document.getElementById('sheetTitle').innerHTML =
+        c.e+' '+s.name+' <span class="badge green" style="background:#2a5d8f;">'+c.label+'</span>';
+      document.getElementById('sheetPhoto').innerHTML = '';
+      document.getElementById('sheetText').textContent = s.note;
+      document.getElementById('sheetSrc').textContent = 'Beispieldaten — echte Standorte folgen aus OpenStreetMap.';
+      sheet.classList.add('open');
+    });
+  });
+  if(activeSvcCats.length && !map.hasLayer(svcLayer)) map.addLayer(svcLayer);
+  if(!activeSvcCats.length && map.hasLayer(svcLayer)) map.removeLayer(svcLayer);
+}
+
+document.getElementById('chipSvc').onclick = ()=>{
+  const oldStay3 = document.getElementById('stayBtn');
+  if(oldStay3) oldStay3.remove();
+  document.getElementById('sheetTitle').innerHTML =
+    'Was brauchst du? <span class="badge green" style="background:#2a5d8f;">Praktisches</span>';
+  document.getElementById('sheetPhoto').innerHTML = '';
+  document.getElementById('sheetText').innerHTML =
+    '<span style="font-size:.82rem;">Wähle Kategorien — sie erscheinen als blaue Punkte auf der Karte.</span>'+
+    '<div class="svc-grid">'+
+    Object.entries(SVC_CATS).map(([k,v])=>
+      '<button class="svc-toggle'+(activeSvcCats.includes(k)?' on':'')+'" data-cat="'+k+'">'+
+      '<span class="sv-emoji">'+v.e+'</span>'+v.label+'</button>').join('')+
+    '</div>';
+  document.getElementById('sheetSrc').textContent = '';
+  sheet.classList.add('open');
+  document.querySelectorAll('.svc-toggle').forEach(btn=>{
+    btn.onclick = ()=>{
+      const cat = btn.dataset.cat;
+      if(activeSvcCats.includes(cat)){
+        activeSvcCats = activeSvcCats.filter(x=>x!==cat);
+        btn.classList.remove('on');
+      } else {
+        activeSvcCats.push(cat);
+        btn.classList.add('on');
+      }
+      renderServices();
+    };
+  });
+};
+
+// ===== Filter =====
+let showGreen=true, showRed=true;
+document.getElementById('chipGreen').onclick = function(){
+  showGreen=!showGreen;
+  this.classList.toggle('off',!showGreen);
+  showGreen ? map.addLayer(greenLayer) : map.removeLayer(greenLayer);
+};
+document.getElementById('chipRed').onclick = function(){
+  showRed=!showRed;
+  this.classList.toggle('off',!showRed);
+  showRed ? map.addLayer(redLayer) : map.removeLayer(redLayer);
+};
+
+// ===== Startseite =====
+const splash = document.getElementById('splash');
+const CONTINENTS = [
+  {flag:'🌎', name:'Karibik & Mittelamerika', price:'14,99 €', sub:'1 Land verfügbar', countries:[
+    {code:'DR', flag:'🇩🇴', name:'Dominikanische Republik', sub:'26 Orte · 9 Zonen · Vorfallmeldungen', free:true},
+    {flag:'🇲🇽', name:'Mexiko', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇨🇺', name:'Kuba', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇨🇷', name:'Costa Rica', sub:'Demnächst verfügbar', price:'4,99 €'},
+  ]},
+  {flag:'🇪🇺', name:'Europa', price:'14,99 €', sub:'1 Land verfügbar', countries:[
+    {code:'DE', flag:'🇩🇪', name:'Deutschland', sub:'12 Orte · 4 Zonen · Vorfallmeldungen', free:true},
+    {flag:'🇪🇸', name:'Spanien', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇮🇹', name:'Italien', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇫🇷', name:'Frankreich', sub:'Demnächst verfügbar', price:'4,99 €'},
+  ]},
+  {flag:'🌏', name:'Asien', price:'14,99 €', sub:'Demnächst', countries:[
+    {flag:'🇹🇭', name:'Thailand', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇻🇳', name:'Vietnam', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇮🇩', name:'Indonesien', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇯🇵', name:'Japan', sub:'Demnächst verfügbar', price:'4,99 €'},
+  ]},
+  {flag:'🌎', name:'Südamerika', price:'14,99 €', sub:'Demnächst', countries:[
+    {flag:'🇧🇷', name:'Brasilien', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇨🇴', name:'Kolumbien', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇵🇪', name:'Peru', sub:'Demnächst verfügbar', price:'4,99 €'},
+  ]},
+  {flag:'🌍', name:'Afrika', price:'14,99 €', sub:'Demnächst', countries:[
+    {flag:'🇿🇦', name:'Südafrika', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇲🇦', name:'Marokko', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇪🇬', name:'Ägypten', sub:'Demnächst verfügbar', price:'4,99 €'},
+  ]},
+  {flag:'🌏', name:'Ozeanien', price:'14,99 €', sub:'Demnächst', countries:[
+    {flag:'🇦🇺', name:'Australien', sub:'Demnächst verfügbar', price:'4,99 €'},
+    {flag:'🇳🇿', name:'Neuseeland', sub:'Demnächst verfügbar', price:'4,99 €'},
+  ]},
+];
+
+function goStep(id){
+  document.querySelectorAll('.splash .step').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function enterCountry(code){
+  switchCountry(code);
+  splash.classList.add('hidden');
+  setTimeout(()=> map.invalidateSize(), 300);
+}
+
+function renderContinents(){
+  document.getElementById('continentList').innerHTML = CONTINENTS.map((c,i)=>{
+    const hasFree = c.countries.some(x=>x.free);
+    return '<button class="dest-card'+(hasFree?' unlocked':' locked')+'" data-ci="'+i+'">'+
+      '<span class="d-flag">'+c.flag+'</span>'+
+      '<span class="d-info"><span class="d-name">'+c.name+'</span><br>'+
+      '<span class="d-sub">'+c.countries.length+' Länder · '+c.sub+'</span></span>'+
+      (hasFree?'<span class="d-price free">Enthalten</span>':'<span class="d-arrow">›</span>')+
+      '</button>';
+  }).join('');
+  document.querySelectorAll('#continentList .dest-card').forEach(card=>{
+    card.onclick = ()=> renderCountries(+card.dataset.ci);
+  });
+}
+
+function renderCountries(ci){
+  const c = CONTINENTS[ci];
+  document.getElementById('countryTitle').textContent = c.flag+' '+c.name;
+  document.getElementById('countryList').innerHTML = c.countries.map((l,i)=>
+    '<button class="dest-card'+(l.free?' unlocked':' locked')+'" data-li="'+i+'">'+
+    '<span class="d-flag">'+l.flag+'</span>'+
+    '<span class="d-info"><span class="d-name">'+l.name+'</span><br>'+
+    '<span class="d-sub">'+l.sub+'</span></span>'+
+    '<span class="d-price '+(l.free?'free':'paid')+'">'+(l.free?'Freigeschaltet':l.price)+'</span>'+
+    '</button>').join('') +
+    '<button class="dest-card locked" data-li="all">'+
+    '<span class="d-flag">'+c.flag+'</span>'+
+    '<span class="d-info"><span class="d-name">Ganz '+c.name+'</span><br>'+
+    '<span class="d-sub">Alle Länder des Kontinents</span></span>'+
+    '<span class="d-price paid">'+c.price+'</span></button>';
+  document.querySelectorAll('#countryList .dest-card').forEach(card=>{
+    card.onclick = ()=>{
+      const li = card.dataset.li;
+      if(li!=='all' && c.countries[+li].free){
+        enterCountry(c.countries[+li].code);
+      } else {
+        showToast('Demo — Kauf & weitere Länder folgen in der echten App');
+      }
+    };
+  });
+  goStep('stepCountry');
+}
+
+renderContinents();
+document.getElementById('splashStart').onclick = ()=> goStep('stepDest');
+document.getElementById('destBack').onclick = ()=> goStep('stepWelcome');
+document.getElementById('countryBack').onclick = ()=> goStep('stepDest');
+document.querySelectorAll('.dest-card.locked[data-name]').forEach(card=>{
+  card.onclick = ()=>{
+    showToast('Demo — Kauf & weitere Länder folgen in der echten App');
+  };
+});
+
+// ===== Standort =====
+const toast = document.getElementById('toast');
+function showToast(msg){
+  toast.textContent=msg; toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),2800);
+}
+let userMarker=null;
+document.getElementById('locateBtn').onclick = ()=>{
+  if(!navigator.geolocation){ showToast('Standort wird nicht unterstützt'); return; }
+  showToast('Suche deinen Standort …');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude:lat, longitude:lng} = pos.coords;
+    if(userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker([lat,lng],{
+      radius:10,color:'#fff',weight:3,fillColor:'#2a7fb8',fillOpacity:1
+    }).addTo(map).bindTooltip('Du bist hier');
+    map.setView([lat,lng],12);
+    showToast('Standort gefunden!');
+  }, ()=> showToast('Standort nicht verfügbar — Zugriff erlaubt?'));
+};
+</script>
+</body>
+</html>
