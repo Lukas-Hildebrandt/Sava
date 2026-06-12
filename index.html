@@ -51,7 +51,20 @@
     padding:6px 11px;cursor:pointer;display:flex;align-items:center;gap:5px;
   }
   .points-chip:active{transform:scale(.96);}
-  header{position:relative;}
+  header{position:relative;padding-left:70px;}
+
+  .nav-left{
+    position:absolute;left:16px;top:14px;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .nav-btn{
+    width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(201,164,100,.4);
+    background:rgba(250,248,243,.07);color:var(--paper);
+    font-size:1.05rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .nav-btn:active{transform:scale(.94);}
 
   .reward-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
   .reward-item{
@@ -212,18 +225,32 @@
     display:flex;align-items:center;justify-content:center;
     font-size:13px;
   }
-  .report-btn{
+  .fab{
     position:absolute;bottom:152px;right:14px;z-index:1000;
-    height:48px;border:1px solid rgba(201,164,100,.4);border-radius:14px;
-    background:rgba(13,31,26,.88);color:var(--paper);font-weight:600;font-size:.82rem;
-    letter-spacing:.03em;
-    padding:0 18px;cursor:pointer;
-    box-shadow:0 4px 14px rgba(0,0,0,.28);
-    display:flex;align-items:center;gap:8px;
-    backdrop-filter:blur(6px);
+    display:flex;align-items:center;gap:10px;
   }
-  .report-btn.active{background:var(--coral);border-color:transparent;}
-  .report-btn:active{transform:scale(.96);}
+  .fab-main{
+    width:50px;height:50px;border-radius:50%;
+    border:1px solid rgba(201,164,100,.4);
+    background:var(--coral);color:#fff;
+    font-size:1.35rem;font-weight:800;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.3);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .2s, background .2s;
+  }
+  .fab-main:active{transform:scale(.94);}
+  .fab-item{
+    width:44px;height:44px;border-radius:50%;
+    border:none;color:#fff;font-size:1.15rem;cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,.3);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:translateX(24px) scale(.5);
+    pointer-events:none;
+    transition:opacity .2s, transform .25s cubic-bezier(.32,.72,.33,1);
+  }
+  .fab.open .fab-item{opacity:1;transform:none;pointer-events:auto;}
+  .fab-item.green{background:var(--palm);}
+  .fab-item.red{background:#a8231f;}
 
   .report-form label{display:block;font-size:.78rem;font-weight:600;margin:12px 0 5px;}
   .report-form select,.report-form input{
@@ -433,6 +460,10 @@
 <body>
 <div id="app">
   <header>
+    <div class="nav-left">
+      <button class="nav-btn" id="changeDest" title="Reiseziel wechseln">🌍</button>
+      <button class="nav-btn" id="backBtn" title="Zurück zur Übersicht">←</button>
+    </div>
     <div class="eyebrow">República Dominicana</div>
     <h1><span class="flag">🇩🇴</span>Sava</h1>
     <button class="points-chip" id="pointsChip">★ <span id="pointsVal">0</span> Puntos</button>
@@ -450,7 +481,11 @@
   </header>
   <div id="map"></div>
   <button class="locate-btn" id="locateBtn" title="Meinen Standort anzeigen">📍</button>
-  <button class="report-btn" id="reportBtn">⚠️ Vorfall melden</button>
+  <div class="fab" id="fab">
+    <button class="fab-item green" id="fabPlace" title="Schönen Ort markieren">🌴</button>
+    <button class="fab-item red" id="fabIncident" title="Vorfall melden">⚠️</button>
+    <button class="fab-main" id="fabMain">!</button>
+  </div>
   <div class="legend">
     <span><span class="lg g"></span>Sehenswert</span>
     <span><span class="lg dr"></span>Gefahr</span>
@@ -1074,6 +1109,7 @@ function switchCountry(code){
     document.querySelector('header h1 .flag').textContent = '🇩🇴';
   }
   rebuildIncidents();
+  if(typeof renderUserPlaces === 'function') renderUserPlaces();
   activeSvcCats = [];
   renderServices();
   searchInput.value = '';
@@ -1098,23 +1134,97 @@ function updateIncidentVisibility(){
 map.on('zoomend', updateIncidentVisibility);
 updateIncidentVisibility();
 
-// ===== Vorfall melden =====
-const reportBtn = document.getElementById('reportBtn');
-let reportMode = false;
-reportBtn.onclick = ()=>{
-  reportMode = !reportMode;
-  reportBtn.classList.toggle('active', reportMode);
-  reportBtn.innerHTML = reportMode ? '✕ Abbrechen' : '⚠️ Vorfall melden';
-  if(reportMode) showToast('Tippe auf die Stelle auf der Karte');
+// ===== Aktionsmenü: Vorfall melden / Ort empfehlen =====
+const fab = document.getElementById('fab');
+const fabMain = document.getElementById('fabMain');
+let reportMode = false, placeMode = false;
+
+function resetFab(){
+  reportMode = false; placeMode = false;
+  fab.classList.remove('open');
+  fabMain.textContent = '!';
+}
+fabMain.onclick = ()=>{
+  if(reportMode || placeMode){ resetFab(); return; }
+  fab.classList.toggle('open');
+};
+document.getElementById('fabIncident').onclick = ()=>{
+  fab.classList.remove('open');
+  reportMode = true; placeMode = false;
+  fabMain.textContent = '✕';
+  showToast('Tippe auf die Stelle des Vorfalls');
+};
+document.getElementById('fabPlace').onclick = ()=>{
+  fab.classList.remove('open');
+  placeMode = true; reportMode = false;
+  fabMain.textContent = '✕';
+  showToast('Tippe auf den schönen Ort');
 };
 
+// Eigene Orts-Empfehlungen
+function addUserPlaceMarker(pl){
+  const icon = L.divIcon({
+    className:'',
+    html:'<div class="pin"><span>'+ICONS.star+'</span></div>',
+    iconSize:[26,26], iconAnchor:[13,24], tooltipAnchor:[0,-22]
+  });
+  const m = L.marker([pl.lat,pl.lng],{icon}).addTo(greenLayer);
+  m.bindTooltip(pl.name,{direction:'top'});
+  m.on('click', e=>{
+    L.DomEvent.stopPropagation(e);
+    openSheet({type:'good', name:pl.name, text:pl.note, src:'Deine Empfehlung'}, true);
+  });
+}
+async function renderUserPlaces(){
+  try{
+    const v = await store.get('my-places');
+    if(v) JSON.parse(v).filter(pl=>pl.country===currentCountry).forEach(addUserPlaceMarker);
+  }catch(e){}
+}
+renderUserPlaces();
+
 map.on('click', e=>{
-  if(!reportMode) return;
+  if(!reportMode && !placeMode) return;
   const {lat,lng} = e.latlng;
+
+  if(placeMode){
+    document.getElementById('sheetTitle').innerHTML =
+      'Ort empfehlen <span class="badge green">Neu</span>';
+    document.getElementById('sheetPhoto').innerHTML = '';
+    document.getElementById('sheetText').innerHTML =
+      '<div class="report-form">'+
+      '<label>Wie heißt der Ort?</label>'+
+      '<input id="plName" type="text" maxlength="60" placeholder="z.B. Versteckte Bucht hinter dem Riff">'+
+      '<label>Warum lohnt er sich? (optional)</label>'+
+      '<input id="plNote" type="text" maxlength="120" placeholder="z.B. Ruhig, tolles Schnorcheln, kaum Touristen">'+
+      '<button class="save" id="plSave">Empfehlung speichern</button></div>';
+    document.getElementById('sheetSrc').textContent = '';
+    sheet.classList.add('open');
+    document.getElementById('plSave').onclick = async ()=>{
+      const pl = {
+        name: document.getElementById('plName').value || 'Schöner Ort',
+        note: document.getElementById('plNote').value || 'Empfohlen von einem Reisenden.',
+        lat, lng, country: currentCountry, user:true
+      };
+      addUserPlaceMarker(pl);
+      try{
+        let list = [];
+        try{ const v = await store.get('my-places'); if(v) list = JSON.parse(v); }catch(_){}
+        list.push(pl);
+        await store.set('my-places', JSON.stringify(list));
+      }catch(err){}
+      sheet.classList.remove('open');
+      resetFab();
+      addPoints(10,'Ort empfohlen');
+    };
+    return;
+  }
+
   const opts = Object.entries(CATS).map(([k,v])=>
     '<option value="'+k+'">'+v.e+' '+v.label+'</option>').join('');
   document.getElementById('sheetTitle').innerHTML =
     'Vorfall melden <span class="badge red">Neu</span>';
+  document.getElementById('sheetPhoto').innerHTML = '';
   document.getElementById('sheetText').innerHTML =
     '<div class="report-form">'+
     '<label>Was ist passiert?</label><select id="incCat">'+opts+'</select>'+
@@ -1144,9 +1254,7 @@ map.on('click', e=>{
       await store.set('my-incidents', JSON.stringify(list));
     }catch(err){ console.error('Speichern fehlgeschlagen', err); }
     sheet.classList.remove('open');
-    reportMode = false;
-    reportBtn.classList.remove('active');
-    reportBtn.innerHTML = '⚠️ Vorfall melden';
+    resetFab();
     addPoints(10,'Vorfall gemeldet');
     updateIncidentVisibility();
   };
@@ -1387,6 +1495,17 @@ renderContinents();
 document.getElementById('splashStart').onclick = ()=> goStep('stepDest');
 document.getElementById('destBack').onclick = ()=> goStep('stepWelcome');
 document.getElementById('countryBack').onclick = ()=> goStep('stepDest');
+document.getElementById('changeDest').onclick = ()=>{
+  sheet.classList.remove('open');
+  goStep('stepDest');
+  splash.classList.remove('hidden');
+};
+document.getElementById('backBtn').onclick = ()=>{
+  sheet.classList.remove('open');
+  map.closePopup();
+  if(currentCountry==='DE') map.flyTo([51.2, 10.4], 6, {duration:1.0});
+  else map.flyTo([18.85, -70.2], 8, {duration:1.0});
+};
 document.querySelectorAll('.dest-card.locked[data-name]').forEach(card=>{
   card.onclick = ()=>{
     showToast('Demo — Kauf & weitere Länder folgen in der echten App');
