@@ -28,6 +28,7 @@
     z-index:1001;
     box-shadow:0 2px 14px rgba(0,0,0,.3);
     border-bottom:1px solid rgba(201,164,100,.35);
+    transition:margin-top .35s cubic-bezier(.32,.72,.33,1);
   }
   header .eyebrow{
     font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
@@ -80,7 +81,7 @@
   .confirm-label{font-size:.68rem;color:#8d8775;margin-top:6px;}
 
   .stay-btn{
-    margin-top:14px;width:100%;padding:13px;border-radius:12px;
+    margin-top:8px;width:100%;padding:10px;border-radius:12px;
     border:1px solid #e6e2d6;background:#fff;
     color:var(--ink);font-weight:600;font-size:.85rem;cursor:pointer;
     display:flex;align-items:center;justify-content:center;gap:9px;
@@ -88,6 +89,15 @@
   }
   .stay-btn:active{transform:scale(.98);}
   .stay-btn .ab{color:#FF5A5F;font-weight:800;}
+
+  .route-btn{
+    margin-top:9px;width:100%;padding:10px;border-radius:12px;
+    border:none;background:#1a73e8;
+    color:#fff;font-weight:600;font-size:.85rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    box-shadow:0 2px 8px rgba(26,115,232,.35);
+  }
+  .route-btn:active{transform:scale(.98);}
 
   .searchbox{position:relative;margin-top:12px;}
   .searchbox input{
@@ -166,7 +176,7 @@
 
   #map{flex:1;width:100%;z-index:1;}
   .soft-tiles{
-    filter:saturate(.45) brightness(1.12) contrast(.85) sepia(.18) hue-rotate(-8deg);
+    filter:saturate(.95) brightness(1.03) contrast(.97);
   }
 
   /* Grüne Orte: Tropfen-Pins */
@@ -259,17 +269,17 @@
     position:absolute;left:0;right:0;bottom:0;z-index:1002;
     background:rgba(255,255,255,.97);border-radius:22px 22px 0 0;
     box-shadow:0 -8px 32px rgba(0,0,0,.28);
-    padding:20px 24px 30px;
+    padding:14px 20px 18px;
     transform:translateY(110%);
     transition:transform .28s cubic-bezier(.32,.72,.33,1);
-    max-height:55%;overflow-y:auto;
+    max-height:42%;overflow-y:auto;
     backdrop-filter:blur(10px);
   }
   .sheet.open{transform:translateY(0);}
-  .sheet .grab{width:36px;height:4px;border-radius:2px;background:#ddd8cc;margin:0 auto 14px;}
+  .sheet .grab{width:36px;height:4px;border-radius:2px;background:#ddd8cc;margin:0 auto 10px;}
   .sheet h2{
     font-family:Georgia,'Times New Roman',serif;
-    font-size:1.15rem;font-weight:500;
+    font-size:1.05rem;font-weight:500;
     display:flex;align-items:center;gap:9px;flex-wrap:wrap;
   }
   .sheet .badge{
@@ -281,26 +291,26 @@
   .badge.red{background:#7a1212;}
   .badge.orange{background:#b35a1f;}
   .badge.yellow{background:#a8851a;}
-  .sheet p{font-size:.86rem;line-height:1.6;margin-top:11px;color:#3c4742;}
+  .sheet p{font-size:.8rem;line-height:1.5;margin-top:8px;color:#3c4742;}
   .sheet .photo{
-    margin-top:14px;border-radius:14px;overflow:hidden;
-    height:130px;position:relative;
+    margin-top:10px;border-radius:12px;overflow:hidden;
+    height:84px;position:relative;
     display:flex;align-items:center;justify-content:center;
   }
   .sheet .photo .ph-icon svg{
-    width:52px;height:52px;stroke:#fff;stroke-width:1.4;fill:none;
+    width:34px;height:34px;stroke:#fff;stroke-width:1.4;fill:none;
     stroke-linecap:round;stroke-linejoin:round;
     filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));
   }
   .sheet .photo .ph-label{
-    position:absolute;bottom:8px;right:12px;
-    font-size:.6rem;color:rgba(255,255,255,.85);
+    position:absolute;bottom:6px;right:10px;
+    font-size:.55rem;color:rgba(255,255,255,.85);
     letter-spacing:.08em;text-transform:uppercase;font-weight:600;
   }
 
   .sheet .src{
-    font-size:.68rem;color:#9a937f;margin-top:14px;font-style:italic;
-    padding-top:10px;border-top:1px solid #efece3;
+    font-size:.64rem;color:#9a937f;margin-top:9px;font-style:italic;
+    padding-top:7px;border-top:1px solid #efece3;
   }
   .sheet .close{
     position:absolute;top:14px;right:16px;border:none;background:#f1eee6;
@@ -716,14 +726,40 @@ L.control.zoom({position:'topright'}).addTo(map);
 map.createPane('zonesPane');
 map.getPane('zonesPane').style.filter = 'blur(6px)';
 map.getPane('zonesPane').style.zIndex = 350;
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution:'© OpenStreetMap', maxZoom:18, className:'soft-tiles'
+// Hübscher Reise-Kartenstil (Carto Voyager). Falls der Server nicht erreichbar ist
+// (z.B. in der Claude-Vorschau), wechselt die App automatisch zur Standardkarte.
+const prettyTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution:'© OpenStreetMap © CARTO', maxZoom:19, subdomains:'abcd'
 }).addTo(map);
+let tileErrors = 0, fallbackActive = false;
+prettyTiles.on('tileerror', ()=>{
+  tileErrors++;
+  if(tileErrors >= 3 && !fallbackActive){
+    fallbackActive = true;
+    map.removeLayer(prettyTiles);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'© OpenStreetMap', maxZoom:18, className:'soft-tiles'
+    }).addTo(map);
+  }
+});
 
 const greenLayer = L.layerGroup().addTo(map);
 const redLayer = L.layerGroup().addTo(map);
 
 const sheet = document.getElementById('sheet');
+
+// Vollbild-Modus: solange der Info-Reiter offen ist, gleitet der Header nach oben weg
+const headerEl = document.querySelector('header');
+let immersiveTimer = null;
+function setImmersive(on){
+  headerEl.style.marginTop = on ? (-headerEl.offsetHeight)+'px' : '';
+  clearTimeout(immersiveTimer);
+  immersiveTimer = setTimeout(()=> map.invalidateSize(), 380);
+}
+new MutationObserver(()=>{
+  setImmersive(sheet.classList.contains('open'));
+}).observe(sheet, {attributes:true, attributeFilter:['class']});
+
 const PHOTO_THEMES = {
   beach:{bg:'linear-gradient(150deg,#5ed0ee 0%,#1273a8 60%,#0a4d7a 100%)', label:'Strand'},
   island:{bg:'linear-gradient(150deg,#ffd98a 0%,#2fbf9a 55%,#0e6e8c 100%)', label:'Insel'},
@@ -762,12 +798,20 @@ function openSheet(p, withPhoto){
   document.getElementById('sheetText').textContent = p.text;
   const oldStay = document.getElementById('stayBtn');
   if(oldStay) oldStay.remove();
+  const oldRoute = document.getElementById('routeBtn');
+  if(oldRoute) oldRoute.remove();
   if(withPhoto && p.type==='good'){
     const q = encodeURIComponent(p.name.replace(/\s*\(.*?\)\s*/g,'') + ', ' + (currentCountry==='DE'?'Deutschland':'Dominikanische Republik'));
     document.getElementById('sheetText').insertAdjacentHTML('afterend',
+      '<button class="route-btn" id="routeBtn" data-url="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lng+'">'+
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3-8 3 8M5 21l7-4 7 4"/><circle cx="12" cy="11" r="1"/></svg>'+
+      'Route über Google Maps starten</button>'+
       '<button class="stay-btn" id="stayBtn" data-url="https://www.airbnb.de/s/'+q+'/homes">'+
       '<span class="ab">ⓐ</span> Unterkünfte bei Airbnb anzeigen</button>');
     document.getElementById('stayBtn').onclick = function(){
+      window.open(this.dataset.url, '_blank');
+    };
+    document.getElementById('routeBtn').onclick = function(){
       window.open(this.dataset.url, '_blank');
     };
   }
@@ -819,7 +863,10 @@ function buildCountry(list){
     m.on('click', e=>{
       L.DomEvent.stopPropagation(e);
       const targetZoom = Math.max(map.getZoom(), 13);
-      map.flyTo([p.lat,p.lng], targetZoom, {duration:1.0});
+      // Ziel etwas nach oben versetzen, damit der Pin über dem Info-Reiter sichtbar bleibt
+      const pt = map.project([p.lat,p.lng], targetZoom);
+      const shifted = map.unproject(pt.add([0, map.getSize().y * 0.16]), targetZoom);
+      map.flyTo(shifted, targetZoom, {duration:1.0});
       openSheet(p, true);
     });
     p._marker = m;
