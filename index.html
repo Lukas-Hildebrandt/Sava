@@ -58,11 +58,20 @@
     display:flex;flex-direction:column;gap:6px;
   }
   .nav-btn{
-    width:34px;height:34px;border-radius:50%;
+    width:40px;height:40px;border-radius:50%;
     border:1px solid rgba(201,164,100,.4);
     background:rgba(250,248,243,.07);color:var(--paper);
     font-size:.95rem;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
+  }
+  .globe-back{position:relative;display:inline-flex;font-size:1.5rem;line-height:1;}
+  .globe-back .gb-arrow{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:17px;height:17px;
+    fill:none;stroke:var(--gold);stroke-width:3.5;
+    stroke-linecap:round;stroke-linejoin:round;
+    paint-order:stroke;
+    filter:drop-shadow(0 0 1.5px rgba(13,31,26,1)) drop-shadow(0 0 1.5px rgba(13,31,26,1));
   }
   .nav-btn:active{transform:scale(.94);}
 
@@ -496,8 +505,9 @@
 <div id="app">
   <header>
     <div class="nav-left">
-      <button class="nav-btn" id="changeDest" title="Reiseziel wechseln">🌍</button>
-      <button class="nav-btn" id="backBtn" title="Zurück zur Übersicht">←</button>
+      <button class="nav-btn" id="changeDest" title="Zurück zur Reiseziel-Auswahl">
+        <span class="globe-back">🌍<svg class="gb-arrow" viewBox="0 0 24 24"><path d="M19 12H5M5 12l6-6M5 12l6 6"/></svg></span>
+      </button>
     </div>
     <div class="eyebrow">República Dominicana</div>
     <h1><span class="flag">🇩🇴</span>Sava</h1>
@@ -805,15 +815,15 @@ L.control.zoom({position:'topright'}).addTo(map);
 map.createPane('zonesPane');
 map.getPane('zonesPane').style.filter = 'blur(6px)';
 map.getPane('zonesPane').style.zIndex = 350;
-// Hübscher Reise-Kartenstil (Carto Voyager). Falls der Server nicht erreichbar ist
-// (z.B. in der Claude-Vorschau), wechselt die App automatisch zur Standardkarte.
-const prettyTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  attribution:'© OpenStreetMap © CARTO', maxZoom:19, subdomains:'abcd'
+// Atlas-artiger Kartenstil: kräftiges Blau & Grün, Geländezeichnung.
+// Fällt bei Server-Problemen automatisch auf die Standardkarte zurück.
+const prettyTiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png', {
+  attribution:'© Stadia Maps © OpenMapTiles © OpenStreetMap', maxZoom:20
 }).addTo(map);
 let tileErrors = 0, fallbackActive = false;
 prettyTiles.on('tileerror', ()=>{
   tileErrors++;
-  if(tileErrors >= 3 && !fallbackActive){
+  if(tileErrors >= 4 && !fallbackActive){
     fallbackActive = true;
     map.removeLayer(prettyTiles);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1549,12 +1559,6 @@ document.getElementById('changeDest').onclick = ()=>{
   sheet.classList.remove('open');
   goStep('stepDest');
   splash.classList.remove('hidden');
-};
-document.getElementById('backBtn').onclick = ()=>{
-  sheet.classList.remove('open');
-  map.closePopup();
-  if(currentCountry==='DE') map.flyTo([51.2, 10.4], 6, {duration:1.0});
-  else map.flyTo([18.85, -70.2], 8, {duration:1.0});
 };
 document.querySelectorAll('.dest-card.locked[data-name]').forEach(card=>{
   card.onclick = ()=>{
