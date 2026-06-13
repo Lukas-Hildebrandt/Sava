@@ -19,29 +19,21 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html,body{height:100%;font-family:'Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--paper);color:var(--ink);}
-  #app{display:flex;flex-direction:column;height:100%;}
+  #app{display:flex;flex-direction:column;height:100%;position:relative;}
+  #map{position:absolute;inset:0;width:100%;height:100%;z-index:1;}
 
   header{
-    background:linear-gradient(165deg,var(--ink) 0%,var(--ink-2) 100%);
+    position:absolute;top:0;left:0;right:0;
+    background:transparent;
     color:var(--paper);
-    padding:9px 16px 10px;
+    padding:8px 8px;
     z-index:1001;
-    box-shadow:0 2px 14px rgba(0,0,0,.3);
-    border-bottom:1px solid rgba(201,164,100,.35);
-    transition:margin-top .35s cubic-bezier(.32,.72,.33,1);
+    border:none;box-shadow:none;
+    transition:opacity .3s ease, transform .3s ease;
+    pointer-events:none;
   }
-  header .eyebrow{
-    font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--gold);font-weight:600;margin-bottom:1px;
-  }
-  header h1{
-    font-family:Georgia,'Times New Roman',serif;
-    font-size:1.15rem;
-    font-weight:500;
-    letter-spacing:.02em;
-  }
-  header h1 .flag{font-size:.95rem;margin-right:6px;}
-  header p{font-size:.62rem;opacity:.6;margin-top:1px;letter-spacing:.02em;}
+  header > *{pointer-events:auto;}
+  header .eyebrow, header h1, header p{display:none;}
 
   .points-chip{
     position:absolute;top:14px;right:16px;
@@ -51,18 +43,18 @@
     padding:6px 11px;cursor:pointer;display:flex;align-items:center;gap:5px;
   }
   .points-chip:active{transform:scale(.96);}
-  header{position:relative;padding-left:70px;}
 
-  .nav-left{
-    position:absolute;left:14px;top:9px;
-    display:flex;flex-direction:column;gap:6px;
+  .top-row{
+    display:flex;align-items:center;gap:8px;
   }
   .nav-btn{
-    width:40px;height:40px;border-radius:50%;
-    border:1px solid rgba(201,164,100,.4);
-    background:rgba(250,248,243,.07);color:var(--paper);
+    flex-shrink:0;
+    width:40px;height:40px;border-radius:12px;
+    border:none;
+    background:rgba(13,31,26,.92);color:var(--paper);
     font-size:.95rem;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.28);
   }
   .globe-back{position:relative;display:inline-flex;font-size:1.5rem;line-height:1;}
   .globe-back .gb-arrow{
@@ -121,18 +113,19 @@
   }
   .route-btn:active{transform:scale(.98);}
 
-  .searchbox{position:relative;margin-top:8px;}
+  .searchbox{position:relative;flex:1;}
   .searchbox input{
-    width:100%;border:1px solid rgba(201,164,100,.3);border-radius:10px;
-    padding:8px 38px 8px 14px;font-size:.85rem;
-    background:rgba(250,248,243,.08);color:var(--paper);outline:none;
-    transition:border-color .2s, background .2s;
+    width:100%;border:none;border-radius:12px;
+    padding:11px 38px 11px 14px;font-size:.85rem;
+    background:rgba(255,255,255,.96);color:var(--ink);outline:none;
+    box-shadow:0 2px 10px rgba(0,0,0,.22);
+    transition:box-shadow .2s;
   }
-  .searchbox input::placeholder{color:rgba(250,248,243,.45);}
-  .searchbox input:focus{border-color:var(--gold);background:rgba(250,248,243,.12);}
+  .searchbox input::placeholder{color:#8a8578;}
+  .searchbox input:focus{box-shadow:0 2px 14px rgba(0,0,0,.3);}
   .searchbox .icon{
-    position:absolute;right:14px;top:50%;transform:translateY(-50%);
-    font-size:.95rem;opacity:.55;pointer-events:none;
+    position:absolute;right:13px;top:50%;transform:translateY(-50%);
+    font-size:.95rem;opacity:.45;pointer-events:none;
   }
   .results{
     position:absolute;top:calc(100% + 8px);left:0;right:0;
@@ -155,25 +148,26 @@
   .results .empty{padding:13px 16px;font-size:.8rem;color:#999;}
 
   .filters{
-    display:flex;gap:8px;margin-top:8px;
+    display:flex;gap:8px;margin-top:8px;margin-left:0;
   }
   .chip{
     flex:1;
-    border:1px solid transparent;border-radius:10px;
-    padding:6px 8px;font-size:.7rem;font-weight:600;letter-spacing:.03em;
+    border:2px solid;border-radius:11px;
+    padding:9px 6px;font-size:.72rem;font-weight:700;letter-spacing:.02em;
     cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
     transition:opacity .15s, transform .1s;
-    color:var(--paper);background:rgba(250,248,243,.07);
+    background:rgba(255,255,255,.96);
+    box-shadow:0 2px 8px rgba(0,0,0,.22);
   }
   .chip:active{transform:scale(.97);}
   .chip .dot{width:8px;height:8px;border-radius:50%;}
-  .chip.green .dot{background:#2eb98c;}
-  .chip.red .dot{background:#d4737e;}
-  .chip.green{border-color:rgba(46,185,140,.4);}
-  .chip.red{border-color:rgba(212,115,126,.4);}
-  .chip.off{opacity:.32;}
-  .chip.gold{border-color:rgba(201,164,100,.45);}
-  .chip.gold .dot{background:var(--gold);}
+  .chip.green{border-color:#0e7a5f;color:#0a5c47;}
+  .chip.green .dot{background:#0e7a5f;}
+  .chip.red{border-color:#8c2f39;color:#8c2f39;}
+  .chip.red .dot{background:#8c2f39;}
+  .chip.gold{border-color:#b07c28;color:#8c6018;}
+  .chip.gold .dot{background:#b07c28;}
+  .chip.off{opacity:.45;}
 
   /* Service-Marker (Praktisches) */
   .svc{
@@ -196,7 +190,6 @@
   .svc-toggle.on{border-color:#2a5d8f;background:rgba(42,93,143,.07);}
   .svc-toggle .sv-emoji{font-size:1.05rem;}
 
-  #map{flex:1;width:100%;z-index:1;}
   .soft-tiles{
     filter:saturate(.95) brightness(1.03) contrast(.97);
   }
@@ -504,18 +497,15 @@
 <body>
 <div id="app">
   <header>
-    <div class="nav-left">
+    <div class="top-row">
       <button class="nav-btn" id="changeDest" title="Zurück zur Reiseziel-Auswahl">
         <span class="globe-back">🌍<svg class="gb-arrow" viewBox="0 0 24 24"><path d="M19 12H5M5 12l6-6M5 12l6 6"/></svg></span>
       </button>
-    </div>
-    <div class="eyebrow">República Dominicana</div>
-    <h1><span class="flag">🇩🇴</span>Sava</h1>
-    <p>Schöne Orte entdecken · Risikozonen erkennen</p>
-    <div class="searchbox">
-      <input id="searchInput" type="text" placeholder="Ort suchen, z.B. Boca Chica …" autocomplete="off">
-      <span class="icon">🔍</span>
-      <div class="results" id="results"></div>
+      <div class="searchbox">
+        <input id="searchInput" type="text" placeholder="Ort suchen, z.B. Boca Chica …" autocomplete="off">
+        <span class="icon">🔍</span>
+        <div class="results" id="results"></div>
+      </div>
     </div>
     <div class="filters">
       <button class="chip green" id="chipGreen"><span class="dot"></span>Schöne Orte</button>
@@ -808,17 +798,17 @@ const store = {
 };
 
 const map = L.map('map', {zoomControl:false}).setView([18.85, -70.2], 8);
-L.control.zoom({position:'topright'}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
 
 // Eigene Ebene für die Risikozonen — der Blur liegt auf der ganzen Ebene
 // (funktioniert so auch auf iPhone/Safari, anders als Blur auf einzelnen Formen)
 map.createPane('zonesPane');
 map.getPane('zonesPane').style.filter = 'blur(6px)';
 map.getPane('zonesPane').style.zIndex = 350;
-// Atlas-artiger Kartenstil: kräftiges Blau & Grün, Geländezeichnung.
+// Gelände-/Naturkarte ohne Straßen: Berge, Grün, Höhenschattierung.
 // Fällt bei Server-Problemen automatisch auf die Standardkarte zurück.
-const prettyTiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png', {
-  attribution:'© Stadia Maps © OpenMapTiles © OpenStreetMap', maxZoom:20
+const prettyTiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png', {
+  attribution:'© Stadia Maps © Stamen Design © OpenMapTiles © OpenStreetMap', maxZoom:18
 }).addTo(map);
 let tileErrors = 0, fallbackActive = false;
 prettyTiles.on('tileerror', ()=>{
@@ -837,13 +827,12 @@ const redLayer = L.layerGroup().addTo(map);
 
 const sheet = document.getElementById('sheet');
 
-// Vollbild-Modus: solange der Info-Reiter offen ist, gleitet der Header nach oben weg
+// Vollbild-Modus: solange der Info-Reiter offen ist, blendet der Header aus
 const headerEl = document.querySelector('header');
-let immersiveTimer = null;
 function setImmersive(on){
-  headerEl.style.marginTop = on ? (-headerEl.offsetHeight)+'px' : '';
-  clearTimeout(immersiveTimer);
-  immersiveTimer = setTimeout(()=> map.invalidateSize(), 380);
+  headerEl.style.opacity = on ? '0' : '1';
+  headerEl.style.pointerEvents = on ? 'none' : '';
+  headerEl.style.transform = on ? 'translateY(-20px)' : '';
 }
 new MutationObserver(()=>{
   setImmersive(sheet.classList.contains('open'));
@@ -1140,13 +1129,9 @@ function switchCountry(code){
   if(code==='DE'){
     buildCountry(PLACES_DE);
     map.setView([51.2, 10.4], 6);
-    document.querySelector('header .eyebrow').textContent = 'Deutschland';
-    document.querySelector('header h1 .flag').textContent = '🇩🇪';
   } else {
     buildCountry(PLACES);
     map.setView([18.85, -70.2], 8);
-    document.querySelector('header .eyebrow').textContent = 'República Dominicana';
-    document.querySelector('header h1 .flag').textContent = '🇩🇴';
   }
   rebuildIncidents();
   if(typeof renderUserPlaces === 'function') renderUserPlaces();
@@ -1505,7 +1490,10 @@ function goStep(id){
 function enterCountry(code){
   switchCountry(code);
   splash.classList.add('hidden');
-  setTimeout(()=> map.invalidateSize(), 300);
+  // Mehrfach auffrischen, damit die Karte zuverlässig die volle Größe annimmt
+  setTimeout(()=> map.invalidateSize(), 100);
+  setTimeout(()=> map.invalidateSize(), 400);
+  setTimeout(()=> map.invalidateSize(), 800);
 }
 
 function renderContinents(){
