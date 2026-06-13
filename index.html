@@ -24,24 +24,24 @@
   header{
     background:linear-gradient(165deg,var(--ink) 0%,var(--ink-2) 100%);
     color:var(--paper);
-    padding:14px 18px 14px;
+    padding:9px 16px 10px;
     z-index:1001;
     box-shadow:0 2px 14px rgba(0,0,0,.3);
     border-bottom:1px solid rgba(201,164,100,.35);
     transition:margin-top .35s cubic-bezier(.32,.72,.33,1);
   }
   header .eyebrow{
-    font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--gold);font-weight:600;margin-bottom:3px;
+    font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:1px;
   }
   header h1{
     font-family:Georgia,'Times New Roman',serif;
-    font-size:1.45rem;
+    font-size:1.15rem;
     font-weight:500;
     letter-spacing:.02em;
   }
-  header h1 .flag{font-size:1.05rem;margin-right:7px;}
-  header p{font-size:.7rem;opacity:.6;margin-top:3px;letter-spacing:.02em;}
+  header h1 .flag{font-size:.95rem;margin-right:6px;}
+  header p{font-size:.62rem;opacity:.6;margin-top:1px;letter-spacing:.02em;}
 
   .points-chip{
     position:absolute;top:14px;right:16px;
@@ -54,14 +54,14 @@
   header{position:relative;padding-left:70px;}
 
   .nav-left{
-    position:absolute;left:16px;top:14px;
-    display:flex;flex-direction:column;gap:8px;
+    position:absolute;left:14px;top:9px;
+    display:flex;flex-direction:column;gap:6px;
   }
   .nav-btn{
-    width:38px;height:38px;border-radius:50%;
+    width:34px;height:34px;border-radius:50%;
     border:1px solid rgba(201,164,100,.4);
     background:rgba(250,248,243,.07);color:var(--paper);
-    font-size:1.05rem;cursor:pointer;
+    font-size:.95rem;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
   }
   .nav-btn:active{transform:scale(.94);}
@@ -112,10 +112,10 @@
   }
   .route-btn:active{transform:scale(.98);}
 
-  .searchbox{position:relative;margin-top:12px;}
+  .searchbox{position:relative;margin-top:8px;}
   .searchbox input{
-    width:100%;border:1px solid rgba(201,164,100,.3);border-radius:12px;
-    padding:11px 40px 11px 16px;font-size:.9rem;
+    width:100%;border:1px solid rgba(201,164,100,.3);border-radius:10px;
+    padding:8px 38px 8px 14px;font-size:.85rem;
     background:rgba(250,248,243,.08);color:var(--paper);outline:none;
     transition:border-color .2s, background .2s;
   }
@@ -146,13 +146,13 @@
   .results .empty{padding:13px 16px;font-size:.8rem;color:#999;}
 
   .filters{
-    display:flex;gap:10px;margin-top:12px;
+    display:flex;gap:8px;margin-top:8px;
   }
   .chip{
     flex:1;
-    border:1px solid transparent;border-radius:12px;
-    padding:8px 10px;font-size:.74rem;font-weight:600;letter-spacing:.04em;
-    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+    border:1px solid transparent;border-radius:10px;
+    padding:6px 8px;font-size:.7rem;font-weight:600;letter-spacing:.03em;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
     transition:opacity .15s, transform .1s;
     color:var(--paper);background:rgba(250,248,243,.07);
   }
@@ -329,6 +329,25 @@
     stroke-linecap:round;stroke-linejoin:round;
     filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));
   }
+  .sheet .photo.gallery img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  }
+  .sheet .photo .g-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);
+    width:30px;height:30px;border-radius:50%;border:none;
+    background:rgba(0,0,0,.4);color:#fff;font-size:1.1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;z-index:2;
+  }
+  .sheet .photo .g-arrow.left{left:8px;}
+  .sheet .photo .g-arrow.right{right:8px;}
+  .sheet .photo .gallery-dots{
+    position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+    display:flex;gap:5px;z-index:2;
+  }
+  .sheet .photo .g-dot{
+    width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);
+  }
+  .sheet .photo .g-dot.on{background:#fff;}
   .sheet .photo .ph-label{
     position:absolute;bottom:6px;right:10px;
     font-size:.55rem;color:rgba(255,255,255,.85);
@@ -348,11 +367,27 @@
 
   .toast{
     position:absolute;top:130px;left:50%;transform:translateX(-50%);
-    background:var(--ink);color:#fff;padding:8px 16px;border-radius:20px;
-    font-size:.78rem;z-index:2100;opacity:0;transition:opacity .3s;pointer-events:none;
-    white-space:nowrap;
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:20px;
+    font-size:.82rem;font-weight:600;z-index:2100;opacity:0;transition:opacity .3s;pointer-events:none;
+    white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.35);
   }
   .toast.show{opacity:1;}
+
+  /* Hinweis im Melde-/Empfehlen-Modus: unteres Drittel, weißer Grund */
+  .mode-banner{
+    position:absolute;bottom:20%;left:50%;transform:translateX(-50%);
+    z-index:1500;
+    padding:12px 22px;border-radius:24px;
+    font-size:.85rem;font-weight:700;letter-spacing:.01em;
+    background:#fff;color:#a8231f;
+    box-shadow:0 4px 16px rgba(0,0,0,.3);
+    display:none;align-items:center;gap:8px;
+    white-space:nowrap;width:max-content;max-width:90vw;
+  }
+  .mode-banner.show{display:inline-flex;}
+  .mode-banner.incident{color:#a8231f;}
+  .mode-banner.place{color:var(--palm);}
+  .mode-banner .mb-pin{font-size:1rem;}
 
   /* ===== Startseite ===== */
   .splash{
@@ -466,7 +501,6 @@
     </div>
     <div class="eyebrow">República Dominicana</div>
     <h1><span class="flag">🇩🇴</span>Sava</h1>
-    <button class="points-chip" id="pointsChip">★ <span id="pointsVal">0</span> Puntos</button>
     <p>Schöne Orte entdecken · Risikozonen erkennen</p>
     <div class="searchbox">
       <input id="searchInput" type="text" placeholder="Ort suchen, z.B. Boca Chica …" autocomplete="off">
@@ -501,6 +535,7 @@
     <div class="src" id="sheetSrc"></div>
   </div>
   <div class="toast" id="toast"></div>
+  <div class="mode-banner" id="modeBanner"></div>
 
   <!-- Startseite -->
   <div class="splash" id="splash">
@@ -555,8 +590,11 @@
 const PLACES = [
   // --- Schöne Orte (grün) ---
   {type:'good', name:'Zona Colonial, Santo Domingo', lat:18.4734, lng:-69.8849,
-   img:'https://commons.wikimedia.org/wiki/Special:FilePath/Santo%20Domingo%20-%20Catedral%20Santa%20Maria%20La%20Menor%20and%20Statue%20of%20Christopher%20Columbus.JPG?width=640',
-   imgCredit:'Foto: Martin Falbisoner, Wikimedia Commons, CC BY-SA 4.0',
+   imgs:[
+     'https://commons.wikimedia.org/wiki/Special:FilePath/Santo%20Domingo%20-%20Catedral%20Santa%20Maria%20La%20Menor%20and%20Statue%20of%20Christopher%20Columbus.JPG?width=640',
+     'https://commons.wikimedia.org/wiki/Special:FilePath/Alcazar%20de%20Colon%20Santo%20Domingo.jpg?width=640'
+   ],
+   imgCredit:'Fotos: Wikimedia Commons',
    text:'UNESCO-Welterbe und älteste europäische Stadtanlage Amerikas. Kathedrale, Alcázar de Colón, gemütliche Plätze und Cafés. Tagsüber sehr gut besuchbar.',
    src:'Beispieldaten · inspiriert von UNESCO & Reiseführern'},
   {type:'good', name:'Playa Bávaro / Punta Cana', lat:18.6996, lng:-68.4055,
@@ -588,6 +626,12 @@ const PLACES = [
    text:'Region um den höchsten Berg der Karibik (3.098 m). Wandern, Rafting, kühles Bergklima — die "dominikanischen Alpen".',
    src:'Beispieldaten'},
   {type:'good', name:'Bahía de las Águilas', lat:17.8580, lng:-71.6420,
+   imgs:[
+     'https://commons.wikimedia.org/wiki/Special:FilePath/Bahia%20de%20las%20Aguilas%20beach.jpg?width=640',
+     'https://commons.wikimedia.org/wiki/Special:FilePath/Bahia%20de%20las%20Aguilas.jpg?width=640',
+     'https://commons.wikimedia.org/wiki/Special:FilePath/Bahia%20de%20las%20Aguilas%205.JPG?width=640'
+   ],
+   imgCredit:'Fotos: Wikimedia Commons',
    text:'Oft als schönster Strand des Landes bezeichnet: 8 km unberührter Sand im Nationalpark Jaragua, ganz im Südwesten. Anfahrt per Boot ab Cabo Rojo.',
    src:'Beispieldaten'},
   {type:'good', name:'Laguna Dudú', lat:19.6440, lng:-69.8980,
@@ -816,14 +860,34 @@ function openSheet(p, withPhoto){
       '<div class="photo" style="background:'+theme.bg+'">'+
       '<span class="ph-icon">'+ICONS[key]+'</span>'+
       '<span class="ph-label">'+theme.label+' · Foto folgt</span></div>';
-    if(p.img){
-      // Echtes Foto laden; bei Fehler (z.B. blockierter Server) automatisch Platzhalter zeigen
+    const imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : null);
+    if(imgs){
+      let idx = 0;
+      const dots = imgs.length > 1
+        ? '<div class="gallery-dots">'+imgs.map((_,i)=>'<span class="g-dot'+(i===0?' on':'')+'"></span>').join('')+'</div>'
+        : '';
+      const arrows = imgs.length > 1
+        ? '<button class="g-arrow left" id="gPrev">‹</button><button class="g-arrow right" id="gNext">›</button>'
+        : '';
       photoEl.innerHTML =
-        '<div class="photo" style="background:'+theme.bg+'">'+
-        '<img src="'+p.img+'" alt="'+p.name+'" '+
-        'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" '+
-        'onerror="this.parentElement.outerHTML=\''+fallback.replace(/'/g,"\\'")+'\'">'+
-        '<span class="ph-label">'+(p.imgCredit||'')+'</span></div>';
+        '<div class="photo gallery" style="background:'+theme.bg+'">'+
+        '<img id="gImg" src="'+imgs[0]+'" alt="'+p.name+'" '+
+        'onerror="this.style.display=\'none\'">'+
+        arrows + dots +
+        (p.imgCredit?'<span class="ph-label">'+p.imgCredit+'</span>':'')+
+        '</div>';
+      if(imgs.length > 1){
+        const gImg = document.getElementById('gImg');
+        const gDots = photoEl.querySelectorAll('.g-dot');
+        const showImg = n=>{
+          idx = (n + imgs.length) % imgs.length;
+          gImg.style.display = '';
+          gImg.src = imgs[idx];
+          gDots.forEach((d,i)=> d.classList.toggle('on', i===idx));
+        };
+        document.getElementById('gPrev').onclick = e=>{ e.stopPropagation(); showImg(idx-1); };
+        document.getElementById('gNext').onclick = e=>{ e.stopPropagation(); showImg(idx+1); };
+      }
     } else {
       photoEl.innerHTML = fallback;
     }
@@ -836,16 +900,10 @@ function openSheet(p, withPhoto){
   const oldRoute = document.getElementById('routeBtn');
   if(oldRoute) oldRoute.remove();
   if(withPhoto && p.type==='good'){
-    const q = encodeURIComponent(p.name.replace(/\s*\(.*?\)\s*/g,'') + ', ' + (currentCountry==='DE'?'Deutschland':'Dominikanische Republik'));
     document.getElementById('sheetText').insertAdjacentHTML('afterend',
       '<button class="route-btn" id="routeBtn" data-url="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lng+'">'+
       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3-8 3 8M5 21l7-4 7 4"/><circle cx="12" cy="11" r="1"/></svg>'+
-      'Route über Google Maps starten</button>'+
-      '<button class="stay-btn" id="stayBtn" data-url="https://www.airbnb.de/s/'+q+'/homes">'+
-      '<span class="ab">ⓐ</span> Unterkünfte bei Airbnb anzeigen</button>');
-    document.getElementById('stayBtn').onclick = function(){
-      window.open(this.dataset.url, '_blank');
-    };
+      'Route über Google Maps starten</button>');
     document.getElementById('routeBtn').onclick = function(){
       window.open(this.dataset.url, '_blank');
     };
@@ -878,6 +936,14 @@ function iconKeyFor(name){
 let activePlaces = PLACES;
 let currentCountry = 'DR';
 let buildId = 0;
+
+// Sanft auf einen Punkt zoomen und ihn über dem Info-Reiter platzieren
+function flyToSpot(lat, lng){
+  const targetZoom = Math.max(map.getZoom(), 14);
+  const pt = map.project([lat,lng], targetZoom);
+  const shifted = map.unproject(pt.add([0, map.getSize().y * 0.16]), targetZoom);
+  map.flyTo(shifted, targetZoom, {duration:1.0});
+}
 
 function buildCountry(list){
   buildId++;
@@ -964,61 +1030,25 @@ function buildCountry(list){
 }
 buildCountry(PLACES);
 
-// ===== Punkte & Belohnungen =====
-let points = 0;
+// Alle Orts-Markierungen ausblenden, wenn man weit herauszoomt (Kontinent-/Weltansicht).
+const MARKER_MIN_ZOOM = 7;
+function updateAllMarkerVisibility(){
+  const show = map.getZoom() >= MARKER_MIN_ZOOM;
+  [greenLayer, redLayer].forEach(layer=>{
+    if(show){ if(!map.hasLayer(layer)) map.addLayer(layer); }
+    else { if(map.hasLayer(layer)) map.removeLayer(layer); }
+  });
+  if(!show){
+    if(typeof incidentLayer!=='undefined' && map.hasLayer(incidentLayer)) map.removeLayer(incidentLayer);
+    if(typeof svcLayer!=='undefined' && map.hasLayer(svcLayer)) map.removeLayer(svcLayer);
+  }
+}
+map.on('zoomend', updateAllMarkerVisibility);
+
+// ===== (Punktesystem entfernt) =====
+// Platzhalter, damit bestehende Aufrufe nicht ins Leere laufen
+function addPoints(){ /* deaktiviert */ }
 let confirmedIds = [];
-const pointsVal = document.getElementById('pointsVal');
-
-async function loadPoints(){
-  try{
-    const v = await store.get('rewards');
-    if(v){
-      const d = JSON.parse(v);
-      points = d.points||0; confirmedIds = d.confirmedIds||[];
-    }
-  }catch(e){}
-  pointsVal.textContent = points;
-}
-async function savePoints(){
-  pointsVal.textContent = points;
-  try{
-    await store.set('rewards', JSON.stringify({points, confirmedIds}));
-  }catch(e){}
-}
-loadPoints();
-
-function addPoints(n, msg){
-  points += n;
-  savePoints();
-  showToast('★ +'+n+' Puntos — '+msg);
-}
-
-const REWARDS = [
-  {pts:50,  name:'Bronze-Entdecker',  sub:'5 % Rabatt auf dein nächstes Länderpaket'},
-  {pts:150, name:'Silber-Entdecker',  sub:'Ein Länderpaket (4,99 €) gratis'},
-  {pts:400, name:'Gold-Entdecker',    sub:'Kontinent-Paket zum halben Preis'},
-  {pts:1000,name:'Embajador',         sub:'Weltweit-Paket gratis + Profil-Abzeichen'}
-];
-document.getElementById('pointsChip').onclick = ()=>{
-  document.getElementById('sheetTitle').innerHTML =
-    'Deine Puntos <span class="badge green">★ '+points+'</span>';
-  document.getElementById('sheetPhoto').innerHTML = '';
-  document.getElementById('sheetText').innerHTML =
-    '<span style="font-size:.83rem;">Sammle Puntos, indem du Vorfälle meldest (+10) und Meldungen anderer bestätigst (+5). Wird deine Meldung von 10 Reisenden bestätigt, gibt es +50 extra.</span>'+
-    '<div class="reward-list">'+
-    REWARDS.map(r=>{
-      const earned = points >= r.pts;
-      return '<div class="reward-item'+(earned?' earned':'')+'">'+
-        '<span class="rw-pts">'+r.pts+' P</span>'+
-        '<span><span class="rw-name">'+r.name+'</span><br><span class="rw-sub">'+r.sub+'</span></span>'+
-        (earned?'<span class="rw-check">✓</span>':'')+
-        '</div>';
-    }).join('')+'</div>';
-  document.getElementById('sheetSrc').textContent =
-    'Prototyp: Bestätigungen anderer Nutzer werden simuliert — echt wird das mit dem zentralen Server.';
-  sheet.classList.add('open');
-};
-
 
 const CATS = {
   diebstahl:{e:'👜',label:'Diebstahl'},
@@ -1071,9 +1101,9 @@ function addIncidentMarker(inc){
       cb.onclick = ()=>{
         inc.confirms = (inc.confirms||0)+1;
         confirmedIds.push(inc.id);
-        addPoints(5,'Meldung bestätigt');
         cb.disabled = true;
         cb.textContent = '✓ Von dir bestätigt';
+        showToast('Danke für deine Bestätigung!');
       };
     }
   });
@@ -1137,12 +1167,26 @@ updateIncidentVisibility();
 // ===== Aktionsmenü: Vorfall melden / Ort empfehlen =====
 const fab = document.getElementById('fab');
 const fabMain = document.getElementById('fabMain');
+const modeBanner = document.getElementById('modeBanner');
 let reportMode = false, placeMode = false;
+
+function showBanner(type){
+  if(type==='incident'){
+    modeBanner.className = 'mode-banner incident show';
+    modeBanner.innerHTML = '<span class="mb-pin">📍</span> Tippe auf die Stelle des Vorfalls';
+  } else if(type==='place'){
+    modeBanner.className = 'mode-banner place show';
+    modeBanner.innerHTML = '<span class="mb-pin">📍</span> Tippe auf den schönen Ort';
+  } else {
+    modeBanner.className = 'mode-banner';
+  }
+}
 
 function resetFab(){
   reportMode = false; placeMode = false;
   fab.classList.remove('open');
   fabMain.textContent = '!';
+  showBanner(null);
 }
 fabMain.onclick = ()=>{
   if(reportMode || placeMode){ resetFab(); return; }
@@ -1152,13 +1196,13 @@ document.getElementById('fabIncident').onclick = ()=>{
   fab.classList.remove('open');
   reportMode = true; placeMode = false;
   fabMain.textContent = '✕';
-  showToast('Tippe auf die Stelle des Vorfalls');
+  showBanner('incident');
 };
 document.getElementById('fabPlace').onclick = ()=>{
   fab.classList.remove('open');
   placeMode = true; reportMode = false;
   fabMain.textContent = '✕';
-  showToast('Tippe auf den schönen Ort');
+  showBanner('place');
 };
 
 // Eigene Orts-Empfehlungen
@@ -1182,6 +1226,16 @@ async function renderUserPlaces(){
   }catch(e){}
 }
 renderUserPlaces();
+
+// Tippen auf eine leere Kartenstelle: sanft heranzoomen, damit Detail-Hinweise erscheinen.
+// (Greift nur, wenn nicht im Melde-/Empfehlen-Modus und kein Info-Reiter offen ist.)
+map.on('click', e=>{
+  if(reportMode || placeMode) return;
+  if(sheet.classList.contains('open')){ sheet.classList.remove('open'); return; }
+  if(map.getZoom() >= 13) return; // nah genug — nicht weiter reinzoomen
+  const targetZoom = Math.min(map.getZoom() + 3, 13);
+  map.flyTo(e.latlng, targetZoom, {duration:0.9});
+});
 
 map.on('click', e=>{
   if(!reportMode && !placeMode) return;
@@ -1215,7 +1269,7 @@ map.on('click', e=>{
       }catch(err){}
       sheet.classList.remove('open');
       resetFab();
-      addPoints(10,'Ort empfohlen');
+      showToast('Danke! Deine Empfehlung ist gespeichert.');
     };
     return;
   }
@@ -1255,7 +1309,7 @@ map.on('click', e=>{
     }catch(err){ console.error('Speichern fehlgeschlagen', err); }
     sheet.classList.remove('open');
     resetFab();
-    addPoints(10,'Vorfall gemeldet');
+    showToast('Danke! Meldung gespeichert.');
     updateIncidentVisibility();
   };
 });
@@ -1343,8 +1397,6 @@ function renderServices(){
     m.bindTooltip(s.name,{direction:'top'});
     m.on('click', e=>{
       L.DomEvent.stopPropagation(e);
-      const oldStay2 = document.getElementById('stayBtn');
-      if(oldStay2) oldStay2.remove();
       document.getElementById('sheetTitle').innerHTML =
         c.e+' '+s.name+' <span class="badge green" style="background:#2a5d8f;">'+c.label+'</span>';
       document.getElementById('sheetPhoto').innerHTML = '';
@@ -1358,8 +1410,6 @@ function renderServices(){
 }
 
 document.getElementById('chipSvc').onclick = ()=>{
-  const oldStay3 = document.getElementById('stayBtn');
-  if(oldStay3) oldStay3.remove();
   document.getElementById('sheetTitle').innerHTML =
     'Was brauchst du? <span class="badge green" style="background:#2a5d8f;">Praktisches</span>';
   document.getElementById('sheetPhoto').innerHTML = '';
